@@ -1,0 +1,1 @@
+"""Pydantic: ChatMessageCreate, ChatMessageRead."""

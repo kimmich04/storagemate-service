@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Bí mật
+.env
+
+# Model & dữ liệu
+models/**
+!models/.gitkeep
+ml/data/golden/**
+!ml/data/golden/.gitkeep
+ml/data/synthetic/**
+!ml/data/synthetic/.gitkeep
+ml/outputs/
+ml/checkpoints/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

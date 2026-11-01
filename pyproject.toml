@@ -1,0 +1,60 @@
+[project]
+name = "storagemate-service"
+version = "0.1.0"
+description = "Storagemate: AI agent ghi nhập/xuất kho F&B qua Zalo Bot"
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+# Nhóm chính: thứ được đóng vào image Docker (api + worker)
+dependencies = [
+    "fastapi[standard]",
+    "sqlalchemy>=2.0",
+    "psycopg[binary]>=3.2",
+    "alembic",
+    "pydantic-settings",
+    "httpx",
+    "apscheduler>=3.10,<4",
+    "pyjwt",
+    "pwdlib[argon2]",
+    "onnxruntime",          # chạy NER ONNX trong worker
+    "transformers",         # chỉ dùng tokenizer khi suy luận (không cần torch)
+    "sentencepiece",
+    "langchain",
+    "langchain-google-genai",
+]
+
+[project.optional-dependencies]
+# Chỉ cài khi train (pip install -e ".[ml]"); KHÔNG vào image Docker
+ml = [
+    "torch",
+    "datasets",
+    "evaluate",
+    "seqeval",
+    "accelerate",
+    "optimum[onnxruntime]",
+    "pandas",
+    "openpyxl",
+]
+dev = [
+    "pytest",
+    "ruff",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
+
+[tool.fastapi]
+entrypoint = "app.main:app"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
