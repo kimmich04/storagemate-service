@@ -25,3 +25,11 @@ ml/checkpoints/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Claude Code (machine-local / regenerable)
+.claude/settings.local.json
+.claude/memory/graph/
+*.usage.json
+graph.json
+graph.html
+graphify-out/cache/

@@ -1,0 +1,10 @@
+# Personal, machine-local Claude settings
+settings.local.json
+
+# graphify graph artifacts (regenerable, can be large) — keep GRAPH_REPORT.md if you want a committed summary
+memory/graph/
+graph.json
+graph.html
+
+# ccusage / usage snapshots
+*.usage.json
