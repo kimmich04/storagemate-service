@@ -1,5 +1,5 @@
 # Integrations
-> last-updated: 2026-11-02
+> last-updated: 2026-11-04
 
 External services and tools. Env var NAMES only — never values. Names match `app/config.py` + `.env.example`.
 
@@ -16,17 +16,26 @@ External services and tools. Env var NAMES only — never values. Names match `a
 Other config: `JWT_SECRET`, `JWT_EXPIRE_MINUTES`, `TZ=Asia/Ho_Chi_Minh`.
 
 ## Webhooks / callbacks
-- Inbound: `POST /webhooks/zalo`, verified by `X-Bot-Api-Secret-Token`. Return 2xx fast; only enqueue.
-- Dedup on `(channel, message_id)` — safe if Zalo redelivers.
-- <!-- unknown: does Zalo retry when we're down? Phase 0 test. If not, messages sent while the laptop is off are lost. -->
+- Inbound: `POST /webhooks/zalo`, verified by `X-Bot-Api-Secret-Token`. Return 2xx fast; only enqueue
+  (Phase 0 exception: no DB yet → `BackgroundTasks` runs `process()` after the 200; see data-flow §3a).
+- Dedup on `(channel, message_id)` — Phase 0: in-RAM `SeenCache` (1 h TTL).
+- **Zalo does NOT retry**: messages sent while the server is down are lost (verified 2026-11-04).
+- Human walkthrough (Vietnamese, file/function level): `docs/zalo-webhook-flow.md`.
 
-## Phase 0 open questions (record answers here)
+## Phase 0 findings (verified live 2026-11-04 unless marked)
 | Question | Answer |
 |----------|--------|
-| Can the bot message a user after days of silence? | <!-- unknown --> |
-| Does Zalo retry failed webhooks? | <!-- unknown --> |
-| Unit of `message.date` (ms?) | <!-- unknown --> |
-| Image event field names | <!-- unknown --> |
+| Can the bot message a user after days of silence? | <!-- unknown: not tested yet --> |
+| Does Zalo retry failed webhooks? | **No.** Server off → ngrok returned 502 to Zalo once per message; after restart, nothing redelivered (watched several minutes). |
+| Unit of `message.date` | **Milliseconds** since epoch. |
+| Webhook body shape | `{event_name, message}` — no `{ok, result}` wrapper. `getUpdates` returns `{ok, result: <one event>}`. |
+| setWebhook verification | Zalo POSTs `{event_name: "webhook.test", message: {date, message_id, text}}` (no `chat`/`from`) with the secret header; returns `verification.outcome` = `webhook.ok` or `webhook.http.<status>` (e.g. `webhook.http.404` = wrong/offline ngrok domain). |
+| No webhook set | `getWebhookInfo` → 404, `deleteWebhook` → 400 (not an empty url). Scripts treat these as "no webhook". |
+| Text event fields | `message_id`, `date`, `message_type: CHAT_TEXT`, `from{id, display_name, is_bot}`, `chat{id, chat_type: PRIVATE}`, `text`. In 1:1 chat `chat.id == from.id`. |
+| Image event field names | <!-- unverified: adapter assumes `photo_url` + `caption`; send a photo and check data/zalo_samples --> |
+
+Dev-machine note: Windows `curl.exe` to `*.ngrok-free.dev` may fail (`CRYPT_E_REVOCATION_OFFLINE`, connection reset) due to
+ISP/antivirus — unrelated to Zalo. Check via `localhost` + ngrok inspector `http://127.0.0.1:4040`.
 
 ## MCP servers used in dev
 | MCP | Why this project needs it |

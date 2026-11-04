@@ -6,7 +6,7 @@ Every task starts as a spec here. Legend: 🔲 not started · 🟡 in progress �
 
 | Spec | Status | Started | Updated | System-design docs touched |
 |------|--------|---------|---------|-----------------------------|
-| 2026-11-01-phase0-zalo-bot-spec.md | 🔲 | – | – | integrations, data-flow |
+| 2026-11-01-phase0-zalo-bot-spec.md | ✅ (field ảnh chưa xác minh → integrations.md) | 2026-11-03 | 2026-11-04 | integrations, data-flow, api-contracts |
 
 ## Roadmap (one or more specs per phase — create with `/new-spec <phase>`)
 | Phase | Goal | Est. | Spec |

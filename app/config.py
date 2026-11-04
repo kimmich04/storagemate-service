@@ -2,6 +2,7 @@
 
 Domain nào cần cấu hình riêng thì tạo <domain>/config.py với BaseSettings riêng.
 """
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -12,6 +13,8 @@ class Settings(BaseSettings):
     ZALO_BOT_TOKEN: str = ""
     ZALO_WEBHOOK_SECRET: str = ""
     PUBLIC_BASE_URL: str = "http://localhost:8000"
+    ZALO_API_BASE: str = "https://bot-api.zaloplatforms.com"
+    ZALO_SAMPLES_DIR: str = "data/zalo_samples"  # payload thô để tra field name (gitignored)
 
     # Database
     DATABASE_URL: str = "postgresql+psycopg://storagemate:storagemate@localhost:5432/storagemate"

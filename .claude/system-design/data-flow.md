@@ -1,5 +1,5 @@
 # Data Flow
-> last-updated: 2026-11-02 · source: `docs/storagemate-proposal-plan-v2.md` §Luồng hệ thống
+> last-updated: 2026-11-04 · source: `docs/storagemate-proposal-plan-v2.md` §Luồng hệ thống
 
 The runtime story. 8 flows: bot setup (once), staff linking, message processing (main), confirm/cancel,
 manager Q&A, scheduled reports, dashboard, flywheel. Business limits are named constants in code.
@@ -60,6 +60,37 @@ else manager → Q&A, staff → syntax help.
 
 Validate: item in catalog (aliases too), unit valid + convertible, qty > 0, OUT not beyond stock,
 `event_time` not in future and ≤ 7 days old. Missing time/date → received time.
+
+## 3a. Phase 0 message path (no DB — what runs today)
+Approved Phase-0-only exception to "webhook only enqueues": there is no queue table yet, so the webhook runs
+`process()` in FastAPI `BackgroundTasks`. Polling calls the **same** `process()`. Nothing is written to a ledger
+(summaries end with "🧪 Bản thử: chưa ghi sổ").
+```mermaid
+sequenceDiagram
+  participant Z as Zalo
+  participant R as router.zalo_webhook
+  participant P as scripts/zalo_poll.py
+  participant Q as queue.process
+  participant D as dispatcher.handle
+  Z->>R: POST /webhooks/zalo + secret header
+  R->>R: verify_zalo_secret (hmac; empty/mismatch → 403)
+  R->>R: save_sample → parse_update → InboundMessage
+  R-->>Z: 200 {"message":"Success"}
+  R->>Q: BackgroundTasks.add_task(process)
+  P->>Z: getUpdates(timeout=30) (only when no webhook)
+  Z-->>P: one event
+  P->>Q: await process(msg, client)
+  Q->>Q: SeenCache.add_if_new(channel:message_id)
+  Q->>Z: sendChatAction(typing)
+  Q->>D: handle(msg, now, PENDING)
+  D->>D: menu/template/help · A/B/C answer · parse_phieu → catalog.resolve → replies.summary
+  D-->>Q: list[Reply]
+  Q->>Z: sendMessage (render: ≤ 2,000 chars/chunk, numbered quick replies)
+```
+- State lives in process RAM: `SeenCache` (1 h) and `PendingStore` (A/B/C question, 10 min). Lost on restart and not
+  shared between the webhook process and the poll script.
+- Any exception in `process()` → logged + "⚠️ Bot gặp lỗi, bạn gửi lại giúp mình nhé"; never raises.
+- Zalo does not redeliver → messages sent while the server is down are lost (integrations.md).
 
 ## 4. Confirm / fix / cancel
 - `OK` → pending → `inventory_log`; sample → `training_samples` (verified = true).

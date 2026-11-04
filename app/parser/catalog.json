@@ -1,0 +1,1197 @@
+[
+ {
+  "code": "1",
+  "name": "Hộp cà phê trứng sấy thăng hoa",
+  "base_unit": "Hộp",
+  "conversions": {
+   "thùng": "24"
+  },
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "2",
+  "name": "Hộp cà phê kem béo sấy thăng hoa",
+  "base_unit": "Hộp",
+  "conversions": {
+   "thùng": "24"
+  },
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "3",
+  "name": "Hộp cà phê sữa sấy thăng hoa",
+  "base_unit": "Hộp",
+  "conversions": {
+   "thùng": "24"
+  },
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "4",
+  "name": "Ly Espresso",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [
+   [
+    "4",
+    "1"
+   ],
+   [
+    "5",
+    "1"
+   ]
+  ],
+  "bundle_needs_bo": true
+ },
+ {
+  "code": "5",
+  "name": "Đĩa kê cốc xanh nhỏ",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "6",
+  "name": "Cốc sứ Capu, Latte",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [
+   [
+    "6",
+    "1"
+   ],
+   [
+    "10",
+    "1"
+   ]
+  ],
+  "bundle_needs_bo": true
+ },
+ {
+  "code": "7",
+  "name": "Cốc sứ 3 màu xanh",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [
+   [
+    "7",
+    "1"
+   ],
+   [
+    "15",
+    "1"
+   ]
+  ],
+  "bundle_needs_bo": true
+ },
+ {
+  "code": "8",
+  "name": "Cốc sứ Capu đỏ cam",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "9",
+  "name": "Đĩa kê cốc đỏ to",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "10",
+  "name": "Đĩa kê cốc xanh to",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "11",
+  "name": "Cốc sứ 3 màu cam",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "12",
+  "name": "Cốc Hoàng hôn",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [
+   [
+    "12",
+    "1"
+   ],
+   [
+    "13",
+    "1"
+   ]
+  ],
+  "bundle_needs_bo": true
+ },
+ {
+  "code": "13",
+  "name": "Đĩa kê cốc cam",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "14",
+  "name": "Cốc Bình minh",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [
+   [
+    "14",
+    "1"
+   ],
+   [
+    "15",
+    "1"
+   ]
+  ],
+  "bundle_needs_bo": true
+ },
+ {
+  "code": "15",
+  "name": "Đĩa kê cốc be",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "16",
+  "name": "Bát quả trứng vỡ vàng",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "17",
+  "name": "Bát quả trứng vỡ đỏ cam",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "18",
+  "name": "Zig café bãi biển",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "19",
+  "name": "Zig café đỏ cam",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "20",
+  "name": "Zig café xanh ngọc",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "21",
+  "name": "Zig café vàng",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "22",
+  "name": "Cốc trứng có nắp be",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "23",
+  "name": "Cốc trứng có nắp đỏ cam",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "24",
+  "name": "Cốc trứng có nắp xanh ngọc",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "25",
+  "name": "Cốc trứng có nắp vàng",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "26",
+  "name": "Bát trứng ngâm bãi biển",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "27",
+  "name": "Bát trứng ngâm đỏ cam",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "28",
+  "name": "Bát trứng ngâm xanh ngọc",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "29",
+  "name": "Bát trứng ngâm vàng",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "30",
+  "name": "Đĩa hình trứng lòng vàng",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "31",
+  "name": "Đĩa tròn trứng lòng vàng 18cm",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "32",
+  "name": "Đĩa tròn trứng lòng vàng 20cm",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "33",
+  "name": "Khay cốc có rãnh EY",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "34",
+  "name": "Thìa gỗ nhọn",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "35",
+  "name": "Thìa gỗ dài",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "36",
+  "name": "Thìa gỗ vuông",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "37",
+  "name": "Set Eggpresso",
+  "base_unit": "Set",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "38",
+  "name": "Set Phin sứ nắp xanh",
+  "base_unit": "Set",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "39",
+  "name": "Set Phin sứ nắp be",
+  "base_unit": "Set",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "40",
+  "name": "Túi bị cói",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "41",
+  "name": "Áo phông đen size M",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "42",
+  "name": "Áo phông đen size L",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "43",
+  "name": "Áo phông đen size XL",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "44",
+  "name": "Áo phông trắng size M",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "45",
+  "name": "Áo phông trắng size L",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "46",
+  "name": "Áo phông trắng size XL",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "47",
+  "name": "Túi vải Artwork màu đỏ",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "48",
+  "name": "Túi vải Artwork màu xanh dương",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "49",
+  "name": "Túi vải Artwork màu xanh lá cây",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "50",
+  "name": "Túi tote Sunshine",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "51",
+  "name": "Túi đựng café hạt Robusta 200g",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "52",
+  "name": "Túi đựng café hạt Arabica House Blend 200g",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "53",
+  "name": "Túi đựng café hạt Arabica Specialty 200g",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "54",
+  "name": "Set phin sứ 599k",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "55",
+  "name": "Eggpresso Robusta",
+  "base_unit": "Thanh",
+  "conversions": {
+   "thùng": "24",
+   "viên": "0.1"
+  },
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "56",
+  "name": "Eggpresso Arabica Specialty",
+  "base_unit": "Thanh",
+  "conversions": {
+   "thùng": "24",
+   "viên": "0.1"
+  },
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "57",
+  "name": "Eggpresso Arabica Blended",
+  "base_unit": "Thanh",
+  "conversions": {
+   "thùng": "24",
+   "viên": "0.1"
+  },
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "58",
+  "name": "Eggpresso House Blend",
+  "base_unit": "Thanh",
+  "conversions": {
+   "thùng": "24",
+   "viên": "0.1"
+  },
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "59",
+  "name": "Eggpresso vị dừa",
+  "base_unit": "Thanh",
+  "conversions": {
+   "thùng": "24",
+   "viên": "0.1"
+  },
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "60",
+  "name": "Eggpresso nhân sâm",
+  "base_unit": "Thanh",
+  "conversions": {
+   "thùng": "24",
+   "viên": "0.1"
+  },
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "61",
+  "name": "Eggpresso caramel vani",
+  "base_unit": "Thanh",
+  "conversions": {
+   "thùng": "24",
+   "viên": "0.1"
+  },
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "62",
+  "name": "Eggpresso vị sầu riêng",
+  "base_unit": "Thanh",
+  "conversions": {
+   "thùng": "24",
+   "viên": "0.1"
+  },
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "63",
+  "name": "Eggpresso trà vỏ cascara",
+  "base_unit": "Thanh",
+  "conversions": {
+   "thùng": "24",
+   "viên": "0.1"
+  },
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "64",
+  "name": "Eggpresso trà đen",
+  "base_unit": "Thanh",
+  "conversions": {
+   "thùng": "24",
+   "viên": "0.1"
+  },
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "65",
+  "name": "Eggpresso hồng trà",
+  "base_unit": "Thanh",
+  "conversions": {
+   "thùng": "24",
+   "viên": "0.1"
+  },
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "66",
+  "name": "Ly café double wall 80ml",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "67",
+  "name": "Ly café double wall 160ml",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "68",
+  "name": "Máy pha viên nén đỏ",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "69",
+  "name": "Máy pha viên nén trắng",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "70",
+  "name": "Thùng da",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "71",
+  "name": "Set cafe hoà tan 3 vị",
+  "base_unit": "Pack",
+  "conversions": {
+   "thùng": "100"
+  },
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "72",
+  "name": "Trúng sứ Santa",
+  "base_unit": "Quả",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "73",
+  "name": "Trứng sứ Three Colors",
+  "base_unit": "Quả",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "74",
+  "name": "Móc khóa hình trứng",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "75",
+  "name": "Unity cà phê dừa",
+  "base_unit": "Hộp",
+  "conversions": {
+   "thùng": "24"
+  },
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "76",
+  "name": "Unity cà phê sữa đá",
+  "base_unit": "Hộp",
+  "conversions": {
+   "thùng": "24"
+  },
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "77",
+  "name": "Unity cà phê Trứng",
+  "base_unit": "Hộp",
+  "conversions": {
+   "thùng": "24"
+  },
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "78",
+  "name": "Bộ phin nhôm xanh đậm",
+  "base_unit": "Bộ",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "79",
+  "name": "Bộ phin nhôm xanh nhạt",
+  "base_unit": "Bộ",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "80",
+  "name": "Bộ phin nhôm xanh lá",
+  "base_unit": "Bộ",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "81",
+  "name": "Bộ phin nhôm đỏ",
+  "base_unit": "Bộ",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "82",
+  "name": "Bộ phin nhôm nâu",
+  "base_unit": "Bộ",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "83",
+  "name": "Bột kem trứng",
+  "base_unit": "Gói",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "84",
+  "name": "Drip coffee",
+  "base_unit": "Gói",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "85",
+  "name": "Cold brew coffee",
+  "base_unit": "Gói",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "86",
+  "name": "Bộ cốc Cappu đỏ cam lòng tiêu",
+  "base_unit": "Bộ",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "87",
+  "name": "Bộ cốc Cappu vàng lòng tiêu",
+  "base_unit": "Bộ",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "88",
+  "name": "Set 3 vị Unity",
+  "base_unit": "Hộp",
+  "conversions": {
+   "thùng": "24"
+  },
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "89",
+  "name": "Bình ủ coldbrew",
+  "base_unit": "Bình",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "90",
+  "name": "Cốc giấy 8oz",
+  "base_unit": "Cái",
+  "conversions": {
+   "thùng": "1000"
+  },
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "91",
+  "name": "Nắp cốc giấy 8oz",
+  "base_unit": "Cái",
+  "conversions": {
+   "thùng": "1000"
+  },
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "92",
+  "name": "Cốc giấy 12oz",
+  "base_unit": "Cái",
+  "conversions": {
+   "thùng": "500"
+  },
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "93",
+  "name": "Nắp cốc giấy 12oz",
+  "base_unit": "Cái",
+  "conversions": {
+   "thùng": "1000"
+  },
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "94",
+  "name": "Cốc nhựa 12oz",
+  "base_unit": "Cái",
+  "conversions": {
+   "thùng": "1000"
+  },
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "95",
+  "name": "Cốc nhựa 16oz",
+  "base_unit": "Cái",
+  "conversions": {
+   "thùng": "1000"
+  },
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "96",
+  "name": "Nắp cốc nhựa",
+  "base_unit": "Cái",
+  "conversions": {
+   "thùng": null
+  },
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "97",
+  "name": "Thìa nhựa vàng",
+  "base_unit": "Cái",
+  "conversions": {
+   "túi": "50",
+   "gói": "50"
+  },
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "98",
+  "name": "Giấy ăn vuông eggyolk",
+  "base_unit": "Kg",
+  "conversions": {
+   "bịch": "1"
+  },
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "99",
+  "name": "Tem dán logo",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "100",
+  "name": "Đường que logo",
+  "base_unit": "Gói",
+  "conversions": {
+   "túi": "100"
+  },
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "101",
+  "name": "Lót cốc cam",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "102",
+  "name": "Lót cốc trắng",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "103",
+  "name": "Lót cốc xanh",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "104",
+  "name": "Túi giấy logo nhỏ",
+  "base_unit": "Cái",
+  "conversions": {
+   "tệp": "10"
+  },
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "105",
+  "name": "Túi giấy logo to",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "106",
+  "name": "Túi 2 cốc mang về",
+  "base_unit": "Kg",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "107",
+  "name": "Túi 4 cốc mang về",
+  "base_unit": "Kg",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "108",
+  "name": "Túi chữ T",
+  "base_unit": "Kg",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "109",
+  "name": "Khay 2 cốc",
+  "base_unit": "Thùng",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "110",
+  "name": "Khay 4 cốc",
+  "base_unit": "Thùng",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "111",
+  "name": "Khay 2 cốc giấy",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "112",
+  "name": "Khay 4 cốc giấy",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "113",
+  "name": "Túi bạc có nắp nhỏ",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "114",
+  "name": "Ống hút size 6",
+  "base_unit": "Cái",
+  "conversions": {
+   "thùng": "3000",
+   "túi": "250",
+   "bịch": "250"
+  },
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "115",
+  "name": "Ống hút size 8",
+  "base_unit": "Cái",
+  "conversions": {
+   "thùng": "2000",
+   "túi": "250",
+   "bịch": "250"
+  },
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "116",
+  "name": "Ống hút size 12",
+  "base_unit": "Cái",
+  "conversions": {
+   "thùng": "1000"
+  },
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "117",
+  "name": "Bột kem cheese",
+  "base_unit": "Túi",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "118",
+  "name": "Bột kem trứng",
+  "base_unit": "Túi",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "119",
+  "name": "Bột kem sữa",
+  "base_unit": "Túi",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "120",
+  "name": "Bột matcha Uji 100g/gói",
+  "base_unit": "Gói",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "121",
+  "name": "Áo đồng phục size M",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "122",
+  "name": "Áo đồng phục size L",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "123",
+  "name": "Áo đồng phục size XL",
+  "base_unit": "Cái",
+  "conversions": {},
+  "bundle": [],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "bo-trung-1",
+  "name": "Bộ trứng bãi biển",
+  "base_unit": "Bộ",
+  "conversions": {},
+  "bundle": [
+   [
+    "26",
+    "1"
+   ],
+   [
+    "22",
+    "1"
+   ],
+   [
+    "18",
+    "1"
+   ]
+  ],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "bo-trung-2",
+  "name": "Bộ trứng đỏ cam",
+  "base_unit": "Bộ",
+  "conversions": {},
+  "bundle": [
+   [
+    "27",
+    "1"
+   ],
+   [
+    "23",
+    "1"
+   ],
+   [
+    "19",
+    "1"
+   ]
+  ],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "bo-trung-3",
+  "name": "Bộ trứng xanh ngọc",
+  "base_unit": "Bộ",
+  "conversions": {},
+  "bundle": [
+   [
+    "28",
+    "1"
+   ],
+   [
+    "24",
+    "1"
+   ],
+   [
+    "20",
+    "1"
+   ]
+  ],
+  "bundle_needs_bo": false
+ },
+ {
+  "code": "bo-trung-4",
+  "name": "Bộ trứng vàng",
+  "base_unit": "Bộ",
+  "conversions": {},
+  "bundle": [
+   [
+    "29",
+    "1"
+   ],
+   [
+    "25",
+    "1"
+   ],
+   [
+    "21",
+    "1"
+   ]
+  ],
+  "bundle_needs_bo": false
+ }
+]
