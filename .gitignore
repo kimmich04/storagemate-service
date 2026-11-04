@@ -33,3 +33,5 @@ Thumbs.db
 graph.json
 graph.html
 graphify-out/cache/
+
+/dataset

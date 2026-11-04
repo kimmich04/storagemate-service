@@ -12,7 +12,7 @@ Bump `last-updated` whenever you change a file. A task is not ✅ until the docs
 |------|---------|------|--------------|
 | overview.md | What the system is, who it's for, the north star | core | `2026-11-01` |
 | architecture.md | C4 view: context → containers → components | core | `2026-11-01` |
-| database-design.md | Schema, ERD, relationships, invariants | core | `2026-11-01` |
+| database-design.md | Schema, ERD, relationships, invariants | core | `2026-11-04` |
 | directory-map.md | What each folder does, module boundaries, "don't touch" | core | `2026-11-01` |
 | data-flow.md | The 8 runtime flows (linking, main message path, confirm/cancel, Q&A, reports, flywheel) | runtime | `2026-11-02` |
 | api-contracts.md | Internal endpoints, Zalo Bot API + error handling, webhook payload | surface | `2026-11-02` |

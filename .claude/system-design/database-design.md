@@ -1,5 +1,5 @@
 # Database Design
-> last-updated: 2026-11-01 · status: **designed, not yet migrated** (`app/*/models.py` are stubs, `alembic/versions/` empty)
+> last-updated: 2026-11-04 · status: **migrated** — `alembic/versions/2026-11-04_init_schema.py` (rev `0001_init`) implements the 11-table MVP schema in `dataset/dbschema` (DBML, tenant-based). The tables section below predates it; where they differ, `dataset/dbschema` + the migration win. `app/*/models.py` are still stubs.
 
 If this doc and the Alembic migrations diverge, the migration wins — fix this doc.
 
@@ -50,4 +50,13 @@ staff by `zalo_chat_id`. <!-- unknown: finalize indexes when writing the first m
 
 ## Migrations
 `alembic revision --autogenerate -m "..."` → review → `alembic upgrade head`. Never edit an applied migration.
-Multi-tenant later = `stores` table + `store_id` columns.
+Migration `0001_init` is hand-written SQL (enums, CHECKs, partial unique indexes, append-only trigger on
+`inventory_log`, RLS policies on `app.tenant_id`, view `current_stock`). ORM models are still stubs, so
+**do not run `--autogenerate` yet** — it would emit `drop_table` for every table.
+
+## Seed data (Excel T10/2026)
+`python scripts/import_excel.py [--dry-run|--reset]` loads `dataset/*.xlsx` → 1 tenant, 4 locations, items,
+units, item_aliases (`source=import`), and `inventory_log` rows (admin `import@storagemate.local`). Opening stock
+= `ADJUST`/`opening`; the gap to Excel's 31/10 closing = one month-end row (220: `OUT`, kho tổng: `ADJUST`), so
+`current_stock` matches Excel. Kho tổng → 220/PQ/đối tác is `OUT` + `counterpart_location_id`, not `TRANSFER`,
+because 220's own "Nhập" sheet already includes those goods.
