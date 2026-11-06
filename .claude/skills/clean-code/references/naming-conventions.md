@@ -39,6 +39,7 @@ def get_them(the_list):
             result.append(x)
     return result
 
+
 # GOOD: Intention is revealed
 def get_flagged_cells(game_board):
     flagged_cells = []

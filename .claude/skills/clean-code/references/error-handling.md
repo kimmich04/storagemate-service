@@ -151,7 +151,9 @@ raise InvoiceValidationError(
 ```python
 class OrderError(Exception):
     """Base exception for order processing."""
+
     pass
+
 
 class InsufficientInventoryError(OrderError):
     def __init__(self, product, requested, available):
@@ -159,17 +161,15 @@ class InsufficientInventoryError(OrderError):
         self.requested = requested
         self.available = available
         super().__init__(
-            f"Cannot fulfill order: {product.name} has "
-            f"{available} units available, {requested} requested"
+            f"Cannot fulfill order: {product.name} has {available} units available, {requested} requested"
         )
+
 
 class PaymentDeclinedError(OrderError):
     def __init__(self, order, reason):
         self.order = order
         self.reason = reason
-        super().__init__(
-            f"Payment declined for order #{order.id}: {reason}"
-        )
+        super().__init__(f"Payment declined for order #{order.id}: {reason}")
 ```
 
 ---
@@ -263,6 +263,7 @@ def get_expenses(employee):
             total += expense.amount if expense.amount is not None else 0
     return total
 
+
 # GOOD: No null checks needed
 def get_expenses(employee):
     expenses = db.find_expenses(employee)  # Returns empty list, never None
@@ -280,17 +281,21 @@ class RealUser:
     def has_permission(self, action):
         return action in self.permissions
 
+
 class GuestUser:
     """Null Object -- behaves like a user with no permissions."""
+
     name = "Guest"
     permissions = frozenset()
 
     def has_permission(self, action):
         return False
 
+
 def find_user(user_id):
     user = db.find(user_id)
     return user if user else GuestUser()
+
 
 # Caller never needs to check for null
 user = find_user(request.user_id)

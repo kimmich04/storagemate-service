@@ -138,12 +138,11 @@ More than three arguments is a smell. Arguments are hard to understand, hard to 
 **Refactoring:**
 ```python
 # BAD: Too many arguments
-def create_user(first_name, last_name, email, phone, address, city, state, zip_code):
-    ...
+def create_user(first_name, last_name, email, phone, address, city, state, zip_code): ...
+
 
 # GOOD: Parameter object
-def create_user(personal_info: PersonalInfo, address: Address):
-    ...
+def create_user(personal_info: PersonalInfo, address: Address): ...
 ```
 
 ### F2: Output Arguments
@@ -277,6 +276,7 @@ def process_order(order):
     # Back to high-level
     send_confirmation(order)
 
+
 # GOOD: Consistent abstraction level
 def process_order(order):
     validate_order(order)
@@ -297,6 +297,7 @@ class ReportGenerator:
         shipping = order.weight * order.shipping_rate
         return subtotal + tax + shipping
 
+
 # GOOD: Move the method to where the data lives
 class Order:
     def calculate_total(self):
@@ -313,14 +314,25 @@ Arguments used to select behavior (not just booleans, but enums and strings too)
 ```python
 # BAD: Selector argument
 def calculate(operation, a, b):
-    if operation == "add": return a + b
-    if operation == "subtract": return a - b
-    if operation == "multiply": return a * b
+    if operation == "add":
+        return a + b
+    if operation == "subtract":
+        return a - b
+    if operation == "multiply":
+        return a * b
+
 
 # GOOD: Separate functions
-def add(a, b): return a + b
-def subtract(a, b): return a - b
-def multiply(a, b): return a * b
+def add(a, b):
+    return a + b
+
+
+def subtract(a, b):
+    return a - b
+
+
+def multiply(a, b):
+    return a * b
 ```
 
 ### G9: Obscured Intent
@@ -329,15 +341,17 @@ Code that is designed to be compact at the expense of clarity.
 
 ```python
 # BAD: What does this do?
-def m(a):return sum(1 for c in a if c.s=='A'and c.d<dt.now()-td(30))
+def m(a):
+    return sum(1 for c in a if c.s == "A" and c.d < dt.now() - td(30))
+
 
 # GOOD: Clear intent
 def count_recently_active_customers(customers):
     thirty_days_ago = datetime.now() - timedelta(days=30)
     return sum(
-        1 for customer in customers
-        if customer.status == 'ACTIVE'
-        and customer.last_active_date < thirty_days_ago
+        1
+        for customer in customers
+        if customer.status == "ACTIVE" and customer.last_active_date < thirty_days_ago
     )
 ```
 

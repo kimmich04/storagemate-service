@@ -101,6 +101,7 @@ def test_expired_subscription():
     user.subscription.check_expiry(current_date=datetime(2024, 2, 1))
     assert user.subscription.status == "expired"
 
+
 # GOOD: Helpers create a readable narrative
 def test_expired_subscription():
     user = a_user().with_pro_subscription(expires_on="2024-01-15").build()
@@ -146,11 +147,13 @@ def test_invoice_generation():
     invoice.mark_as_paid()
     assert invoice.status == "paid"  # Concept 2: payment status transition
 
+
 # GOOD: Each test covers one concept
 def test_should_calculate_correct_invoice_total():
     order = an_order().with_total(150.00).build()
     invoice = billing_service.generate_invoice(order)
     assert invoice.total == 150.00
+
 
 def test_should_transition_to_paid_when_marked_as_paid():
     invoice = an_invoice().with_status("pending").build()
@@ -184,13 +187,16 @@ def test_a_create_user():
     global test_user
     test_user = UserService.create("Alice")
 
+
 def test_b_update_user():
     UserService.update(test_user.id, name="Bob")  # Fails if A doesn't run first
+
 
 # GOOD: Each test is self-contained
 def test_create_user():
     user = UserService.create("Alice")
     assert user.name == "Alice"
+
 
 def test_update_user():
     user = UserService.create("Alice")  # Own setup
@@ -220,6 +226,7 @@ Tests should have a boolean output: pass or fail. No manual interpretation requi
 def test_report_generation():
     report = generate_report()
     print(report)  # Developer must read and visually verify
+
 
 # GOOD: Automated assertion
 def test_report_generation():
@@ -266,14 +273,17 @@ Test names should describe the scenario being tested and the expected behavior.
 When testing the same behavior with different inputs, use parameterized tests instead of copy-pasting.
 
 ```python
-@pytest.mark.parametrize("input_email,expected_valid", [
-    ("user@example.com", True),
-    ("user@sub.example.com", True),
-    ("user@example", False),
-    ("@example.com", False),
-    ("user@.com", False),
-    ("", False),
-])
+@pytest.mark.parametrize(
+    "input_email,expected_valid",
+    [
+        ("user@example.com", True),
+        ("user@sub.example.com", True),
+        ("user@example", False),
+        ("@example.com", False),
+        ("user@.com", False),
+        ("", False),
+    ],
+)
 def test_email_validation(input_email, expected_valid):
     assert validate_email(input_email) == expected_valid
 ```
@@ -290,17 +300,30 @@ class UserBuilder:
         self._role = "viewer"
         self._active = True
 
-    def with_name(self, name): self._name = name; return self
-    def with_role(self, role): self._role = role; return self
-    def inactive(self): self._active = False; return self
+    def with_name(self, name):
+        self._name = name
+        return self
+
+    def with_role(self, role):
+        self._role = role
+        return self
+
+    def inactive(self):
+        self._active = False
+        return self
+
     def build(self):
         return User(
-            name=self._name, email=self._email,
-            role=self._role, active=self._active,
+            name=self._name,
+            email=self._email,
+            role=self._role,
+            active=self._active,
         )
+
 
 def a_user():
     return UserBuilder()
+
 
 # Usage in tests
 admin = a_user().with_name("Alice").with_role("admin").build()
@@ -316,6 +339,7 @@ def test_should_raise_on_negative_amount():
     account = an_account().with_balance(100).build()
     with pytest.raises(ValueError, match="Amount must be positive"):
         account.withdraw(-50)
+
 
 def test_should_raise_on_insufficient_funds():
     account = an_account().with_balance(100).build()

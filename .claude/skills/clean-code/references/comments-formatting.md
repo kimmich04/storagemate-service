@@ -183,6 +183,7 @@ This is what version control is for. `git log` and `git blame` provide this info
 #         user_cache[user_id] = db.get_user(user_id)
 #     return user_cache[user_id]
 
+
 def get_user(user_id):
     return db.get_user(user_id)
 ```
@@ -270,7 +271,6 @@ from myapp.services import EmailService
 
 
 class UserRegistration:
-
     def __init__(self, email_service):
         self.email_service = email_service
 
@@ -286,9 +286,12 @@ import os
 import sys
 from myapp.models import User
 from myapp.services import EmailService
+
+
 class UserRegistration:
     def __init__(self, email_service):
         self.email_service = email_service
+
     def register(self, name, email):
         user = User.create(name=name, email=email)
         self.email_service.send_welcome(user)

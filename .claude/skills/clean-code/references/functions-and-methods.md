@@ -57,6 +57,7 @@ def process_payment(order):
     email_service.send_receipt(order.customer.email, order)
     analytics.track("payment_completed", order.id)
 
+
 # GOOD: Does one thing, delegates details
 def process_payment(order):
     validate_order(order)
@@ -147,12 +148,12 @@ def render(document, is_for_print):
         # 20 lines of screen rendering
         ...
 
-# GOOD: Two clearly named functions
-def render_for_print(document):
-    ...
 
-def render_for_screen(document):
-    ...
+# GOOD: Two clearly named functions
+def render_for_print(document): ...
+
+
+def render_for_screen(document): ...
 ```
 
 If a function must behave differently based on a condition, split it into two named functions. If the behaviors share logic, extract the shared part into a private helper.
