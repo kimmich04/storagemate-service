@@ -1,0 +1,7 @@
+{
+  "// note": "Copy to settings.local.json for personal, uncommitted overrides. This file is gitignored.",
+  "// keys": "Do NOT put secrets here. ZALO_BOT_TOKEN etc. live only in the repo-root .env; MCP keys in GLOBAL ~/.claude env.",
+  "permissions": {
+    "allow": ["Bash(docker compose up:*)", "Bash(python scripts/zalo_poll.py:*)", "Bash(uv run:*)"]
+  }
+}

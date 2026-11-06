@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Bí mật
+.env
+
+# Model & dữ liệu
+models/**
+!models/.gitkeep
+ml/data/golden/**
+!ml/data/golden/.gitkeep
+ml/data/synthetic/**
+!ml/data/synthetic/.gitkeep
+ml/outputs/
+ml/checkpoints/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Claude Code (machine-local / regenerable)
+.claude/settings.local.json
+.claude/memory/graph/
+*.usage.json
+graph.json
+graph.html
+graphify-out/cache/
+
+# Dữ liệu thật của quán (Pha 0)
+data/
+tests/fixtures/*.txt
+tests/fixtures/*.xlsx
+/dataset

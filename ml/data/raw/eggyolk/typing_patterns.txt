@@ -1,0 +1,11 @@
+# Cách nhân viên Eggyolk thực tế gõ tin nhập/xuất — chép lại từ trí nhớ.
+# Mỗi dòng = 1 tin, GÕ ĐÚNG NHƯ HỌ GÕ: giữ lỗi chính tả, không dấu, viết tắt, emoji, xuống dòng thì nối bằng " / ".
+# Không cần gán nhãn. Nếu câu dễ hiểu nhầm, thêm " ## " rồi ghi ý đúng.
+# Dòng bắt đầu bằng # bị bỏ qua.
+#
+# Ví dụ (xoá đi khi điền):
+# xuat 2 hop sua tuoi ( thường ghi vậy sẽ bị quản lý hỏi liền vì ghi không rõ ràng thời gian)
+# nhập trứng 30 vỉ sáng nay
+# lấy 3 cái croissant ra tủ ## xuất 3 cái croissant
+# ao den size L 5 cai ## xuất 5 cái áo thun đen L
+

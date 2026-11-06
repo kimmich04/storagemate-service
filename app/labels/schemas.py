@@ -1,0 +1,1 @@
+"""Pydantic: LabelRead, LabelUpdate."""
