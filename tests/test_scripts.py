@@ -4,12 +4,16 @@ import importlib.util
 import subprocess
 import sys
 import uuid
+from collections.abc import Callable
 from pathlib import Path
 from types import ModuleType
 
 import pytest
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from app.channels.zalo_client import ZaloApiError
+from app.messaging.models import InboundMessage as InboundRow
 from tests.fakes import FakeSender
 
 SCRIPTS_DIR = Path(__file__).resolve().parents[1] / "scripts"
@@ -81,27 +85,37 @@ async def test_poll_refuses_to_start_while_webhook_is_set(capsys: pytest.Capture
     assert client.calls == []
 
 
+def _queued_texts(session_factory: Callable[[], Session]) -> list[str | None]:
+    with session_factory() as session:
+        return list(session.scalars(select(InboundRow.text)))
+
+
 @pytest.mark.anyio
-async def test_poll_answers_updates_and_stops_on_bad_token(tmp_path: Path) -> None:
+async def test_poll_enqueues_updates_and_stops_on_bad_token(
+    tmp_path: Path, session_factory: Callable[[], Session]
+) -> None:
     zalo_poll = _load("zalo_poll")
     client = FakePollClient("", [_update("menu")])
 
-    exit_code = await zalo_poll.run(client, tmp_path)
+    exit_code = await zalo_poll.run(client, tmp_path, session_factory)
 
     assert exit_code == 1
-    assert any("📋 Chọn nhanh" in text for text in client.messages())
+    assert _queued_texts(session_factory) == ["menu"]
+    assert client.calls == []  # worker mới trả lời
     assert len(list(tmp_path.glob("*.jsonl"))) == 1
 
 
 @pytest.mark.anyio
-async def test_poll_treats_404_webhook_info_as_no_webhook(tmp_path: Path) -> None:
+async def test_poll_treats_404_webhook_info_as_no_webhook(
+    tmp_path: Path, session_factory: Callable[[], Session]
+) -> None:
     zalo_poll = _load("zalo_poll")
     no_webhook = ZaloApiError("getWebhookInfo", 404, "Not Found")
     client = FakePollClient("", [_update("menu")], webhook_error=no_webhook)
 
-    await zalo_poll.run(client, tmp_path)
+    await zalo_poll.run(client, tmp_path, session_factory)
 
-    assert any("📋 Chọn nhanh" in text for text in client.messages())
+    assert _queued_texts(session_factory) == ["menu"]
 
 
 @pytest.mark.anyio

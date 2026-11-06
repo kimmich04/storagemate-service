@@ -1,7 +1,7 @@
 """⚡ /webhooks/zalo — Zalo gọi, KHÔNG phải UI.
 
-Pha 0 (chưa DB, ngoại lệ đã duyệt): kiểm secret → lưu mẫu → BackgroundTasks chạy process() → trả 200 ngay.
-Pha DB: dòng add_task đổi thành enqueue, process() chuyển sang worker.
+Kiểm secret → lưu mẫu → INSERT inbound_messages (trùng thì bỏ qua) → trả 200 ngay.
+Xử lý ở worker (app/worker.py).
 """
 
 import hmac
@@ -9,11 +9,13 @@ import logging
 from pathlib import Path
 from typing import Annotated
 
-from fastapi import APIRouter, BackgroundTasks, Body, Depends, Header, HTTPException, Request, status
+from fastapi import APIRouter, Body, Depends, Header, HTTPException, status
+from sqlalchemy.orm import Session
 
 from app.channels.zalo import parse_update, save_sample
 from app.config import settings
-from app.messaging.queue import Sender, process
+from app.database import get_db
+from app.messaging import inbox
 
 logger = logging.getLogger(__name__)
 
@@ -21,13 +23,11 @@ router = APIRouter(prefix="/webhooks", tags=["webhooks"])
 
 SUCCESS = {"message": "Success"}
 
+DbSession = Annotated[Session, Depends(get_db)]
+
 
 def get_webhook_secret() -> str:
     return settings.ZALO_WEBHOOK_SECRET
-
-
-def get_zalo_sender(request: Request) -> Sender:
-    return request.app.state.zalo
 
 
 def get_samples_dir() -> Path:
@@ -47,8 +47,7 @@ def verify_zalo_secret(
 @router.post("/zalo", dependencies=[Depends(verify_zalo_secret)])
 def zalo_webhook(
     payload: Annotated[dict, Body()],
-    background: BackgroundTasks,
-    sender: Annotated[Sender, Depends(get_zalo_sender)],
+    db: DbSession,
     samples_dir: Annotated[Path, Depends(get_samples_dir)],
 ) -> dict[str, str]:
     save_sample(payload, samples_dir)
@@ -56,5 +55,7 @@ def zalo_webhook(
     if msg is None:
         logger.warning("Bỏ qua payload Zalo không đọc được (event_name=%s)", payload.get("event_name"))
         return SUCCESS
-    background.add_task(process, msg, sender)
+    if not inbox.enqueue(db, msg, payload):
+        logger.info("Bỏ qua tin trùng %s", msg.message_id)
+    db.commit()
     return SUCCESS

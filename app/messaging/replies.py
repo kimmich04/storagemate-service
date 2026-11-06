@@ -4,6 +4,7 @@ from datetime import date, datetime
 from decimal import Decimal
 
 from app.channels.base import Reply
+from app.inventory.ledger import LedgerResult
 from app.parser.catalog import ResolvedLine
 from app.parser.normalize import fold
 from app.parser.regex import UNKNOWN_LOC, Phieu, RawLine
@@ -68,10 +69,49 @@ def summary(phieu: Phieu, lines: list[ResolvedLine]) -> Reply:
         parts.append(f"⚠️ Chưa có dòng hàng nào — thêm mỗi món một dòng `{LINE_HINT}`")
     if any(line.status != "ok" for line in lines):
         parts.append(
-            "👉 Sửa dòng có ❓ cho rõ tên/loại hàng (vd: Unity trứng 15 thùng) rồi gửi lại cả phiếu."
+            "👉 Sửa dòng có ❓ cho rõ tên/loại hàng (vd: Unity trứng 15 thùng) — dòng đó chưa được ghi."
         )
-    parts.append("🧪 Bản thử: chưa ghi sổ")
     return Reply("\n".join(parts))
+
+
+def ledger_result(phieu: Phieu, result: LedgerResult) -> Reply | None:
+    """Báo phần nào đã vào sổ và phần nào CHƯA, để nhân viên gõ lại đúng các dòng thiếu."""
+    if result.date_error:
+        return Reply(
+            f"⚠️ Chưa ghi phiếu: {result.date_error}. Kiểm tra lại ngày ở dòng đầu rồi gửi lại cả phiếu.",
+            parse_mode=None,
+        )
+    if result.total == 0:
+        return None
+    parts = []
+    if result.written:
+        parts.append(f"✅ Đã ghi {result.written}/{result.total} dòng — {_route(phieu)}, {phieu.date:%d/%m}.")
+    if result.skipped:
+        parts.append(f"⚠️ Chưa ghi {len(result.skipped)} dòng (CHƯA có trong sổ và dashboard):")
+        parts += [f"• «{skip.raw}» — {skip.reason}" for skip in result.skipped]
+        action = "xuất" if phieu.action == "OUT" else "nhập"
+        parts.append(f"Gõ lại các dòng này thành phiếu mới, dòng đầu vẫn ghi ngày + {action} như phiếu cũ.")
+    return Reply("\n".join(parts), parse_mode=None)
+
+
+def invite_needed() -> Reply:
+    return Reply(
+        "🔒 Tài khoản Zalo này chưa được liên kết với nhân viên nào nên mình chưa ghi gì. "
+        "Gửi mã mời 6 ký tự quản lý đưa cho bạn (vd: K7P2Q9) để bắt đầu nhé.",
+        parse_mode=None,
+    )
+
+
+def invite_rejected() -> Reply:
+    return Reply(
+        "❌ Mã mời không đúng hoặc đã hết hạn. Kiểm tra lại mã, hoặc nhờ quản lý tạo mã mới cho bạn.",
+        parse_mode=None,
+    )
+
+
+def welcome(staff_name: str, location_name: str) -> list[Reply]:
+    greeting = Reply(f"Chào {staff_name} 👋 Bạn đã được kết nối với {location_name}.", parse_mode=None)
+    return [greeting, help_text()]
 
 
 def duplicate_question(group: tuple[int, ...], line: RawLine) -> Reply:
@@ -104,12 +144,16 @@ def _template(kind: str, header: str) -> list[Reply]:
 
 
 def _heading(phieu: Phieu) -> str:
+    return f"📦 {_route(phieu)}"
+
+
+def _route(phieu: Phieu) -> str:
     if phieu.action == "IN":
         route = (
             f"về {phieu.to_loc}" if phieu.from_loc == UNKNOWN_LOC else f"{phieu.from_loc} → {phieu.to_loc}"
         )
-        return f"📦 NHẬP · {route}"
-    return f"📦 XUẤT · {phieu.from_loc} → {phieu.to_loc}"
+        return f"NHẬP · {route}"
+    return f"XUẤT · {phieu.from_loc} → {phieu.to_loc}"
 
 
 def _date_line(phieu: Phieu) -> str:

@@ -1,4 +1,5 @@
 """Alembic env: lấy DATABASE_URL từ app/config.py, metadata từ app/models.py."""
+
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config, pool
@@ -16,7 +17,8 @@ from app.models import Base
 from app.staff import models as _staff_models  # noqa: F401
 
 config = context.config
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL.replace("%", "%%"))
+if not config.get_main_option("sqlalchemy.url"):  # test đặt sẵn TEST_DATABASE_URL thì giữ nguyên
+    config.set_main_option("sqlalchemy.url", settings.DATABASE_URL.replace("%", "%%"))
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)

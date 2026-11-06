@@ -1,5 +1,5 @@
 # Data Flow
-> last-updated: 2026-11-04 · source: `docs/storagemate-proposal-plan-v2.md` §Luồng hệ thống
+> last-updated: 2026-11-07 · source: `docs/storagemate-proposal-plan-v2.md` §Luồng hệ thống
 
 The runtime story. 8 flows: bot setup (once), staff linking, message processing (main), confirm/cancel,
 manager Q&A, scheduled reports, dashboard, flywheel. Business limits are named constants in code.
@@ -31,6 +31,16 @@ sequenceDiagram
     W-->>S: reject, write nothing (>5 fails / 15 min → lock chat_id)
   end
 ```
+**Phase 1 implementation** (spec `2026-11-06-phase1-invite-code-spec.md`, `app/messaging/queue._handle_unlinked` +
+`app/staff/service.redeem_invite`):
+- No dashboard yet → manager's step is `python scripts/dev_db.py --invite "Tên" [--role manager]` (creates the staff row
+  if the name is new, revokes older unused codes, prints the code). The manager sends the code to the staff member.
+- Unlinked chat: text → strip spaces + upper-case; not 6 × `A-Z0-9` → "gửi mã mời" reply, `ignored` / `unlinked`.
+  Code valid (unused, not revoked, not expired, staff active) → link chat + `from.id`, `used_at`, greeting + syntax,
+  `done` / `invite_ok`. Anything else → one identical rejection, `done` / `invite_failed`.
+- Chat / Zalo user held by an **inactive** staff row → moved to the new row; held by an **active** row → rejected.
+- A linked chat that sends a code-like text is treated as normal text. No lockout yet: Phase 4 counts
+  `route = 'invite_failed'` per `chat_id` in 15 min (no extra column).
 
 ## 3. Message processing (main flow)
 ```mermaid
@@ -61,35 +71,42 @@ else manager → Q&A, staff → syntax help.
 Validate: item in catalog (aliases too), unit valid + convertible, qty > 0, OUT not beyond stock,
 `event_time` not in future and ≤ 7 days old. Missing time/date → received time.
 
-## 3a. Phase 0 message path (no DB — what runs today)
-Approved Phase-0-only exception to "webhook only enqueues": there is no queue table yet, so the webhook runs
-`process()` in FastAPI `BackgroundTasks`. Polling calls the **same** `process()`. Nothing is written to a ledger
-(summaries end with "🧪 Bản thử: chưa ghi sổ").
+## 3a. Phase 1 message path (what runs today — spec 2026-11-06-phase1-db-ledger)
+Webhook and `scripts/zalo_poll.py` only **enqueue**; `python -m app.worker` (exactly one) answers.
 ```mermaid
 sequenceDiagram
   participant Z as Zalo
-  participant R as router.zalo_webhook
-  participant P as scripts/zalo_poll.py
-  participant Q as queue.process
+  participant R as router.zalo_webhook / zalo_poll
+  participant DB as postgres
+  participant W as worker → queue.process_next
   participant D as dispatcher.handle
-  Z->>R: POST /webhooks/zalo + secret header
-  R->>R: verify_zalo_secret (hmac; empty/mismatch → 403)
-  R->>R: save_sample → parse_update → InboundMessage
-  R-->>Z: 200 {"message":"Success"}
-  R->>Q: BackgroundTasks.add_task(process)
-  P->>Z: getUpdates(timeout=30) (only when no webhook)
-  Z-->>P: one event
-  P->>Q: await process(msg, client)
-  Q->>Q: SeenCache.add_if_new(channel:message_id)
-  Q->>Z: sendChatAction(typing)
-  Q->>D: handle(msg, now, PENDING)
-  D->>D: menu/template/help · A/B/C answer · parse_phieu → catalog.resolve → replies.summary
-  D-->>Q: list[Reply]
-  Q->>Z: sendMessage (render: ≤ 2,000 chars/chunk, numbered quick replies)
+  participant L as ledger.record
+  Z->>R: POST /webhooks/zalo + secret (or getUpdates)
+  R->>R: verify secret (403) · save_sample · parse_update
+  R->>DB: inbox.enqueue: INSERT … ON CONFLICT (channel, external_id) DO NOTHING
+  R-->>Z: 200
+  W->>DB: BEGIN; claim 1 pending FOR UPDATE SKIP LOCKED (status=processing)
+  W->>Z: sendChatAction(typing)
+  W->>DB: staff by zalo_chat_id — none/inactive → status=ignored, route=unlinked
+  W->>D: handle(msg, now, PendingStore) → Outcome(replies, route, phieu?, origin?)
+  D-->>W: phiếu chốt (no duplicate group left) or A/B/C question
+  W->>L: phiếu chốt → INSERT inventory_log per line (regex, base unit, stock check)
+  L-->>W: LedgerResult(written, total, skipped+reason, date_error)
+  W->>DB: status=done, route; COMMIT
+  W->>Z: summary + "✅ Đã ghi x/y" + lines NOT written (after COMMIT only)
 ```
-- State lives in process RAM: `SeenCache` (1 h) and `PendingStore` (A/B/C question, 10 min). Lost on restart and not
-  shared between the webhook process and the poll script.
-- Any exception in `process()` → logged + "⚠️ Bot gặp lỗi, bạn gửi lại giúp mình nhé"; never raises.
+- One transaction per message; crash → rollback → message back to `pending`. Handler error → rollback, new txn
+  `status=failed`, `error`, `attempts+1`, staff gets "⚠️ Bot gặp lỗi…". Send failure after commit is only logged.
+- Lines are written **one by one**: unknown/ambiguous item, unconverted unit, unreadable line, OUT beyond stock →
+  skipped and listed in the reply ("CHƯA có trong sổ và dashboard"); staff retypes them as a new phiếu.
+  Bundle ("bộ") → one row per component; one component short → whole line skipped.
+- Date of the whole phiếu in the future or > 7 days old → nothing written.
+- Every row: `location_id` = staff's default location (kho tổng); the other side → `counterpart_location_id`
+  (no match → NULL). Only kho tổng stock is tracked.
+- `route` on `inbound_messages`: `phieu` · `phieu_partial` · `phieu_rejected` · `phieu_waiting` (A/B/C asked) ·
+  `phieu_answer` (the "a"/"c" reply; ledger rows point to the **original** phiếu message) · `unlinked` · `other`.
+  Phase 2 re-parses `text` of `phieu_partial` rows to send skipped lines to NER/LLM.
+- `PendingStore` (A/B/C, 10 min) still lives in worker RAM — fine with one worker, lost on restart.
 - Zalo does not redeliver → messages sent while the server is down are lost (integrations.md).
 
 ## 4. Confirm / fix / cancel

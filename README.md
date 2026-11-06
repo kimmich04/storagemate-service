@@ -7,6 +7,41 @@ Backend của **Storagemate**: AI agent ghi nhận nhập/xuất kho cho cửa h
 - **PostgreSQL**: sổ cái nhập/xuất (append-only), hàng đợi, danh mục
 - **ML**: train NER tiếng Việt (ViDeBERTa → ONNX), không deploy
 
+## Đang làm tới đâu — đọc trước khi code
+
+> Cập nhật 2026-11-07 · người làm: Nash · nhánh `develop`
+
+**Trạng thái:** đang ở **Pha 1**. Bot Zalo ghi phiếu nhập/xuất vào PostgreSQL. Nhân viên phải nhập mã mời mới dùng được bot.
+Bảng tiến độ: [`.claude/specs/STATUS.md`](.claude/specs/STATUS.md).
+
+| Spec | Làm gì | Trạng thái |
+|---|---|---|
+| [Phase 0 — Zalo bot](.claude/specs/2026-11-01-phase0-zalo-bot-spec.md) | Nhận tin Zalo, regex đọc phiếu, hỏi lại khi tên món trùng | ✅ |
+| [Phase 1 — DB + sổ kho](.claude/specs/2026-11-06-phase1-db-ledger-spec.md) | Hàng đợi tin trong Postgres, 1 worker, ghi `inventory_log` từng dòng, báo dòng chưa ghi | 🟡 polling đã test qua Zalo; còn test webhook |
+| [Phase 1 — Mã mời](.claude/specs/2026-11-06-phase1-invite-code-spec.md) | Chat chưa liên kết gửi mã 6 ký tự → gắn với nhân viên | ✅ polling đã test qua Zalo |
+
+**Đọc một spec theo thứ tự này** (mọi spec cùng khuôn [`_TEMPLATE-spec-backend.md`](.claude/specs/_TEMPLATE-spec-backend.md)):
+
+1. **Đầu file — `Trạng thái`**: xong chưa, bao nhiêu test pass, ngày cập nhật.
+2. **§0 Quyết định đã chốt**: bảng "Owner đã chốt" là quyết định của owner, không tự đổi. Bảng "Quyết định của Claude" là đề xuất, muốn đổi thì hỏi owner.
+3. **§1 Phạm vi**: có gì trong bản này, cái gì để spec sau.
+4. **§2 Cài đặt & chạy**: dựng PostgreSQL 16 + seed, chạy bot bằng polling, các ca test qua Zalo (T1–T6, I1–I6) kèm kết quả từng ca.
+5. **§7 Luồng xử lý**: quy tắc nghiệp vụ (luật 7 ngày, chặn xuất vượt tồn, route của từng tin).
+6. **§11 Checklist nghiệm thu**: ô đã tick là đã kiểm, ô trống là việc còn lại.
+
+**Báo cáo kết quả lần làm 2026-11-06 → 07** nằm ngay trong spec:
+
+| Muốn biết | Xem |
+|---|---|
+| Test tự động | Dòng `Trạng thái code` đầu spec. Lần chạy gần nhất: `ruff` sạch, `pytest` 133 pass trên DB `storagemate_test` |
+| Test thật qua Zalo | Spec mã mời §2.1: bảng I1–I6, cột "Kết quả 2026-11-07". Spec DB-ledger §2.4: các ca T1–T6 |
+| Lỗi đã gặp khi dựng DB + cách sửa | Spec DB-ledger §2.6 |
+| Việc còn lại | §11 của từng spec (ô chưa tick) + cột Status trong `STATUS.md` |
+| Kiến trúc đã đổi | [`.claude/system-design/data-flow.md`](.claude/system-design/data-flow.md) §2 (mã mời), §3a (đường đi của tin ở Pha 1) |
+
+**Chạy thử nhanh Pha 1:** làm theo spec DB-ledger §2.2 → §2.3 (cần PostgreSQL 16 và file seed), rồi tạo mã bằng
+`python scripts/dev_db.py --invite "Tên"` và gửi mã đó cho bot.
+
 ## Mục lục
 
 1. [Yêu cầu](#1-yêu-cầu)
@@ -115,7 +150,8 @@ Mở trình duyệt:
 pytest
 ```
 
-Kết quả mong đợi: `2 passed`.
+Chưa đặt `TEST_DATABASE_URL` thì các test cần DB bị **skip**. Muốn chạy đủ, tạo DB riêng `storagemate_test` rồi đặt
+`TEST_DATABASE_URL` trỏ vào đó (spec DB-ledger §2.5). Không trỏ vào DB dev, vì DB test bị xoá sạch mỗi lần chạy.
 
 ---
 
@@ -160,6 +196,8 @@ Khai báo trong `.env` (mẫu: `.env.example`), đọc bởi `app/config.py`. **
 |---|---|---|
 | `DATABASE_URL` | Kết nối Postgres | `postgresql+psycopg://storagemate:storagemate@localhost:5432/storagemate` |
 | `DATABASE_URL_READONLY` | User chỉ đọc cho Q&A agent | `postgresql+psycopg://qa_reader:***@localhost:5432/storagemate` |
+| `TEST_DATABASE_URL` | DB riêng cho pytest (bị xoá sạch mỗi lần chạy). Để trống thì test DB bị skip | `postgresql+psycopg://postgres:***@127.0.0.1:5432/storagemate_test` |
+| `WORKER_POLL_SECONDS` | Hàng đợi rỗng thì worker ngủ bao lâu | `1.0` |
 | `ZALO_BOT_TOKEN` | Gọi Zalo Bot API | lấy từ Zalo Bot Creator |
 | `ZALO_WEBHOOK_SECRET` | Xác thực webhook | chuỗi ngẫu nhiên ≥ 32 ký tự |
 | `PUBLIC_BASE_URL` | URL public cho webhook | `https://<ten>.ngrok-free.app` |
@@ -214,10 +252,10 @@ storagemate-service/
 
 ### 7.1 Trạng thái hiện thực
 
-Repo đang ở **scaffold + Pha 0** (xem `.claude/specs/STATUS.md`). Đã chạy được: `app/main.py`, `app/api.py`,
-`app/config.py`, `app/database.py`, `app/models.py`, `app/exceptions.py`, khung router từng domain, `/health`.
-Phần lớn file `service.py` / `models.py` / `parser/*` / `qa/*` hiện **chỉ có docstring mô tả nhiệm vụ** —
-mô tả trong mục này là kiến trúc đích mà các file đó sẽ hiện thực theo roadmap Pha 0 → 6.
+Repo đang ở **Pha 1** (xem [Đang làm tới đâu](#đang-làm-tới-đâu--đọc-trước-khi-code)). Đã chạy được:
+webhook + `scripts/zalo_poll.py` enqueue, `app/worker.py` → `messaging/queue.py` → `messaging/dispatcher.py` →
+`inventory/ledger.py`, mã mời (`staff/service.py`), migration `0001_init`, script dev `scripts/dev_db.py`.
+Chưa làm: NER/LLM, `Hủy`, báo cáo, Q&A, API dashboard. Phần mô tả các module đó dưới đây là kiến trúc đích theo roadmap.
 
 ### 7.2 Hai process, một codebase
 

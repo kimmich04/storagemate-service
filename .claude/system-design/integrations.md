@@ -1,5 +1,5 @@
 # Integrations
-> last-updated: 2026-11-04
+> last-updated: 2026-11-06
 
 External services and tools. Env var NAMES only — never values. Names match `app/config.py` + `.env.example`.
 
@@ -17,8 +17,8 @@ Other config: `JWT_SECRET`, `JWT_EXPIRE_MINUTES`, `TZ=Asia/Ho_Chi_Minh`.
 
 ## Webhooks / callbacks
 - Inbound: `POST /webhooks/zalo`, verified by `X-Bot-Api-Secret-Token`. Return 2xx fast; only enqueue
-  (Phase 0 exception: no DB yet → `BackgroundTasks` runs `process()` after the 200; see data-flow §3a).
-- Dedup on `(channel, message_id)` — Phase 0: in-RAM `SeenCache` (1 h TTL).
+  into `inbound_messages`; the worker answers (data-flow §3a).
+- Dedup on `(channel, external_id)` via `INSERT … ON CONFLICT DO NOTHING` (`app/messaging/inbox.py`).
 - **Zalo does NOT retry**: messages sent while the server is down are lost (verified 2026-11-04).
 - Human walkthrough (Vietnamese, file/function level): `docs/zalo-webhook-flow.md`.
 

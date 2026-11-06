@@ -9,16 +9,12 @@ Docs:      http://127.0.0.1:8000/docs
 OpenAPI:   http://127.0.0.1:8000/api/openapi.json  ← repo web sinh client TypeScript từ đây
 """
 
-from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.routing import APIRoute
 
 from app.api import api_router
 from app.channels import router as channels
-from app.channels.zalo_client import ZaloClient
 from app.config import settings
 from app.exceptions import register_exception_handlers
 
@@ -29,19 +25,10 @@ def custom_generate_unique_id(route: APIRoute) -> str:
     return f"{tag}-{route.name}"
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-    """Một ZaloClient (một httpx.AsyncClient) dùng chung cho cả process."""
-    app.state.zalo = ZaloClient(settings.ZALO_BOT_TOKEN, settings.ZALO_API_BASE)
-    yield
-    await app.state.zalo.aclose()
-
-
 app = FastAPI(
     title="Storagemate Service",
     openapi_url="/api/openapi.json",
     generate_unique_id_function=custom_generate_unique_id,
-    lifespan=lifespan,
 )
 
 # 🖥️ (1) CORS: chỉ cho phép domain của dashboard (CORS_ORIGINS trong .env) gọi vào

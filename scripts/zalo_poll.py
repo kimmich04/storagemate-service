@@ -1,18 +1,23 @@
-"""Chế độ dev không cần webhook: long-poll getUpdates rồi gọi đúng process() mà webhook dùng.
+"""Chế độ dev không cần webhook: long-poll getUpdates rồi enqueue vào inbound_messages như webhook.
 
-Chạy: python scripts/zalo_poll.py   (Ctrl+C để dừng). Polling và webhook loại trừ nhau.
+Chạy: python scripts/zalo_poll.py  +  python -m app.worker (worker mới trả lời).
+Polling và webhook loại trừ nhau.
 """
 
 import asyncio
 import logging
 import sys
+from collections.abc import Callable
 from pathlib import Path
 from typing import Protocol
+
+from sqlalchemy.orm import Session
 
 from app.channels.zalo import parse_update, save_sample
 from app.channels.zalo_client import ZaloApiError, ZaloClient
 from app.config import settings
-from app.messaging.queue import Sender, process
+from app.database import SessionLocal
+from app.messaging import inbox
 
 POLL_TIMEOUT_SECONDS = 30
 ERROR_PAUSE_SECONDS = 5
@@ -20,13 +25,24 @@ TOKEN_ERROR_CODE = 401
 NO_WEBHOOK_CODE = 404  # thực tế 03/11: getWebhookInfo trả 404 (không phải url rỗng) khi bot chưa đặt webhook
 
 
-class PollClient(Sender, Protocol):
+class PollClient(Protocol):
     async def get_webhook_info(self) -> dict: ...
 
     async def get_updates(self, timeout: int = POLL_TIMEOUT_SECONDS) -> dict | None: ...
 
 
-async def run(client: PollClient, samples_dir: Path) -> int:
+def enqueue(update: dict, session_factory: Callable[[], Session] = SessionLocal) -> None:
+    msg = parse_update(update)
+    if msg is None:
+        print("Bỏ qua sự kiện không đọc được (đã lưu mẫu).")
+        return
+    with session_factory() as session, session.begin():
+        inbox.enqueue(session, msg, update)
+
+
+async def run(
+    client: PollClient, samples_dir: Path, session_factory: Callable[[], Session] = SessionLocal
+) -> int:
     """Trả exit code: 1 khi webhook đang bật hoặc token hỏng."""
     try:
         webhook = await client.get_webhook_info()
@@ -51,11 +67,7 @@ async def run(client: PollClient, samples_dir: Path) -> int:
         if not update:
             continue
         save_sample(update, samples_dir)
-        msg = parse_update(update)
-        if msg is None:
-            print("Bỏ qua sự kiện không đọc được (đã lưu mẫu).")
-            continue
-        await process(msg, client)
+        enqueue(update, session_factory)
 
 
 async def main() -> int:

@@ -1,5 +1,5 @@
 # API Contracts
-> last-updated: 2026-11-04 · source: `docs/storagemate-proposal-plan-v2.md` §API sử dụng
+> last-updated: 2026-11-06 · source: `docs/storagemate-proposal-plan-v2.md` §API sử dụng
 
 Source of truth for the internal API = FastAPI OpenAPI (`/api/openapi.json`); the dashboard generates its TS
 client from it, so `operation_id` (`<tag>-<func>`) must stay stable. This doc is the human summary.
@@ -18,7 +18,7 @@ client from it, so `operation_id` (`<tag>-<func>`) must stay stable. This doc is
 ## Internal endpoints
 | Method | Path | Caller | Purpose |
 |--------|------|--------|---------|
-| POST | `/webhooks/zalo` | Zalo | Verify secret, enqueue, 200 (Phase 0: BackgroundTasks, see below) |
+| POST | `/webhooks/zalo` | Zalo | Verify secret, enqueue into `inbound_messages`, 200 |
 | GET | `/health` | Compose, CI | DB, queue, `getMe` |
 | POST | `/api/auth/login` | Dashboard | Password → JWT |
 | GET | `/api/stock` | Dashboard | `current_stock` view |
@@ -63,10 +63,12 @@ Implemented in `app/channels/zalo_client.py` (`ZaloClient._call`): retries 403/4
 | Case | Response |
 |------|----------|
 | `X-Bot-Api-Secret-Token` missing/wrong, or `ZALO_WEBHOOK_SECRET` empty | **403**, body not read (dependency runs first) |
-| Valid secret, readable event | **200** `{"message":"Success"}`, then `process()` in BackgroundTasks (Phase 0) |
+| Valid secret, readable event | **200** `{"message":"Success"}` after `INSERT … ON CONFLICT (channel, external_id) DO NOTHING`; the worker answers |
+| Same `message_id` again | **200**, still one row (dedup) |
+| DB error on INSERT | **500** — Zalo does not retry, so the message is lost (logged) |
 | Valid secret, unreadable event (e.g. `webhook.test`) | **200** `{"message":"Success"}`, warning logged, nothing sent |
 
-Every accepted payload is appended raw to `data/zalo_samples/YYYY-MM-DD.jsonl` (gitignored, Phase 0 only).
+Every accepted payload is appended raw to `data/zalo_samples/YYYY-MM-DD.jsonl` (gitignored; kept for field discovery).
 
 Webhook body (verified live 2026-11-04 — **no** `{ok, result}` wrapper; `getUpdates` wraps one event in `{ok, result}`):
 ```json

@@ -19,6 +19,10 @@ class Settings(BaseSettings):
     # Database
     DATABASE_URL: str = "postgresql+psycopg://storagemate:storagemate@localhost:5432/storagemate"
     DATABASE_URL_READONLY: str = ""  # user qa_reader, chỉ SELECT, dùng cho Q&A agent
+    TEST_DATABASE_URL: str = ""  # DB riêng cho pytest (bị xoá sạch mỗi lần chạy); trống → bỏ qua test DB
+
+    # Worker
+    WORKER_POLL_SECONDS: float = 1.0  # hàng đợi rỗng thì ngủ bao lâu rồi hỏi lại
 
     # Auth
     JWT_SECRET: str = "change-me"
