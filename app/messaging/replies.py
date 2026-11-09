@@ -4,6 +4,7 @@ from datetime import date, datetime
 from decimal import Decimal
 
 from app.channels.base import Reply
+from app.config import settings
 from app.inventory.ledger import LedgerResult
 from app.parser.catalog import ResolvedLine
 from app.parser.normalize import fold
@@ -72,6 +73,27 @@ def summary(phieu: Phieu, lines: list[ResolvedLine]) -> Reply:
             "👉 Sửa dòng có ❓ cho rõ tên/loại hàng (vd: Unity trứng 15 thùng) — dòng đó chưa được ghi."
         )
     return Reply("\n".join(parts))
+
+
+def llm_confirm(phieu: Phieu, lines: list[ResolvedLine]) -> Reply:
+    """Phiếu do LLM đọc: tóm tắt + hỏi OK/Sai. Chưa ghi gì cho tới khi nhân viên trả OK."""
+    ask = (
+        "🤖 Tin này không theo mẫu phiếu nên mình tự đọc, bạn kiểm tra giúp nhé.\n"
+        f"Gõ OK để ghi sổ, Sai để hủy (trong {settings.PENDING_TTL_MINUTES} phút)."
+    )
+    return Reply(f"{summary(phieu, lines).text}\n\n{ask}")
+
+
+def pending_rejected() -> Reply:
+    return Reply("Đã hủy, chưa ghi gì. Bạn gõ lại giúp mình (hoặc gõ `menu` để xem mẫu phiếu) nhé.")
+
+
+def pending_expired() -> Reply:
+    return Reply("⌛ Bản chờ đã hết hạn nên chưa ghi gì. Bạn gửi lại tin giúp mình nhé.")
+
+
+def nothing_pending() -> Reply:
+    return Reply("Hiện không có phiếu nào đang chờ xác nhận. Gõ `menu` để xem mẫu phiếu nhé.")
 
 
 def ledger_result(phieu: Phieu, result: LedgerResult) -> Reply | None:

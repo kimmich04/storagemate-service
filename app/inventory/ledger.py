@@ -72,6 +72,7 @@ def record(
     raw_message: str | None,
     sent_at: datetime,
     now: datetime,
+    source: str = "regex",
 ) -> LedgerResult:
     total = len(phieu.lines) + len(phieu.bad_lines)
     event_time = _event_time(phieu, sent_at)
@@ -92,7 +93,9 @@ def record(
             continue
         note = "; ".join(n for n in (resolved.line.note, phieu.date_note) if n) or None
         for part in parts:
-            session.add(_row(phieu, part, staff, counterpart, event_time, inbound_id, raw_message, note))
+            session.add(
+                _row(phieu, part, staff, counterpart, event_time, inbound_id, raw_message, note, source)
+            )
         written += 1
     session.flush()
     return LedgerResult(written=written, total=total, skipped=skipped)
@@ -199,6 +202,7 @@ def _row(
     inbound_id: int | None,
     raw_message: str | None,
     note: str | None,
+    source: str,
 ) -> InventoryLog:
     sign = 1 if phieu.action == "IN" else -1
     return InventoryLog(
@@ -215,7 +219,7 @@ def _row(
         staff_id=staff.id,
         inbound_id=inbound_id,
         raw_message=raw_message,
-        parser_source="regex",
+        parser_source=source,
         note=note,
     )
 

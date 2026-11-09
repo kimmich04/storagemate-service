@@ -1,5 +1,5 @@
 # Integrations
-> last-updated: 2026-11-06
+> last-updated: 2026-11-09
 
 External services and tools. Env var NAMES only — never values. Names match `app/config.py` + `.env.example`.
 
@@ -7,7 +7,7 @@ External services and tools. Env var NAMES only — never values. Names match `a
 | Service | Used for | Auth (env var) | Failure mode |
 |---------|----------|----------------|--------------|
 | Zalo Bot Platform (beta) | 1:1 chat in/out | `ZALO_BOT_TOKEN`, `ZALO_WEBHOOK_SECRET` | Beta rules may change; max 3 bots/account (1 dev, 1 demo); error table in api-contracts.md |
-| LLM (Gemini Flash-Lite, tentative) | Parser fallback (structured output), Q&A tool calling | `GEMINI_API_KEY`, `LLM_MODEL` | Down/limited → parser reports "not understood"; Q&A unavailable. Final choice Phase 2 |
+| LLM (Gemini Flash-Lite; verified live 2026-11-09 with `gemini-3.5-flash-lite`) | Parser fallback (structured output via `langchain-google-genai` 4.x, `with_structured_output(LlmPhieu)`), Q&A tool calling (chưa làm) | `GEMINI_API_KEY`, `LLM_MODEL`, `LLM_TIMEOUT_SECONDS` (15), `PENDING_TTL_MINUTES` (10) | Key/model blank → LLM tier off. Error, timeout, quota 429, schema violation → `None` → regex reply (no retry; only the error class is logged). Model ignores `temperature` (don't set it) |
 | Hugging Face Hub | NER `.onnx` versions | `HF_MODEL_REPO` (+ `NER_MODEL_PATH` local) | Missing model → cascade skips NER (regex → LLM) |
 | ngrok (free dev domain) | Fixed HTTPS URL for webhook + dashboard API | `PUBLIC_BASE_URL` | 20k req + 1 GB/month; browser warning page; laptop off = bot offline |
 | Vercel | Hosts the dashboard (separate repo) | `CORS_ORIGINS` here | — |
