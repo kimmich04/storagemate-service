@@ -12,11 +12,11 @@ Bump `last-updated` whenever you change a file. A task is not ✅ until the docs
 |------|---------|------|--------------|
 | overview.md | What the system is, who it's for, the north star | core | `2026-11-01` |
 | architecture.md | C4 view: context → containers → components | core | `2026-11-01` |
-| database-design.md | Schema, ERD, relationships, invariants | core | `2026-11-07` |
-| directory-map.md | What each folder does, module boundaries, "don't touch" | core | `2026-11-07` |
-| data-flow.md | The 8 runtime flows (linking, main message path, confirm/cancel, Q&A, reports, flywheel) + Phase 1 queue/ledger path | runtime | `2026-11-07` |
+| database-design.md | Schema, ERD, relationships, invariants | core | `2026-11-09` |
+| directory-map.md | What each folder does, module boundaries, "don't touch" | core | `2026-11-09` |
+| data-flow.md | The 8 runtime flows (linking, main message path, confirm/cancel, Q&A, reports, flywheel) + Phase 1 queue/ledger path + Phase 2a LLM/OK-Sai | runtime | `2026-11-09` |
 | api-contracts.md | Internal endpoints, Zalo Bot API + error handling, webhook payload | surface | `2026-11-06` |
-| integrations.md | Zalo, LLM, HF Hub, ngrok, Vercel; env var names; Phase 0 findings | surface | `2026-11-06` |
+| integrations.md | Zalo, LLM, HF Hub, ngrok, Vercel; env var names; Phase 0 findings, LLM (Gemini) | surface | `2026-11-09` |
 | deployment.md | Laptop Compose + ngrok, Vercel, CI/CD, rollback | surface | `2026-11-06` |
 | conventions.md | Code discipline (KISS/SOLID), naming, errors, testing, security invariants | intent | `2026-11-01` |
 | decisions/ | ADRs 0001–0007 — channel, queue, identity, ledger, parser, hosting | intent | `2026-11-02` |

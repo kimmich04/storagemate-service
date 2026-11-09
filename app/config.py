@@ -31,6 +31,8 @@ class Settings(BaseSettings):
     # LLM (Q&A + parser fallback)
     GEMINI_API_KEY: str = ""
     LLM_MODEL: str = ""  # tên model Gemini Flash-Lite, lấy trong Google AI Studio
+    LLM_TIMEOUT_SECONDS: float = 15.0  # quá hạn thì coi như LLM lỗi (không thử lại)
+    PENDING_TTL_MINUTES: int = 10  # thời hạn nhân viên trả OK/Sai cho bản chờ do LLM đọc
 
     # NER
     HF_MODEL_REPO: str = ""

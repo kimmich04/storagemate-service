@@ -155,11 +155,35 @@ def test_photo_with_phieu_caption_gets_summary(real_messages: list[str], pending
     assert len(NUMBERED_LINE.findall(text)) == 14
 
 
-def test_unknown_text_gets_hint_and_menu(pending: PendingStore) -> None:
-    replies = _replies(_msg("hello"), NOW, pending)
+def test_unknown_text_gets_hint_and_menu_and_may_ask_llm(pending: PendingStore) -> None:
+    outcome = handle(_msg("hello"), NOW, pending)
 
-    assert "chưa hiểu" in _all_text(replies)
-    assert replies[-1].quick_replies == ["Mẫu Xuất", "Mẫu Nhập", "Hướng dẫn"]
+    assert outcome.wants_llm is True
+    assert "chưa hiểu" in _all_text(outcome.replies)
+    assert outcome.replies[-1].quick_replies == ["Mẫu Xuất", "Mẫu Nhập", "Hướng dẫn"]
+
+
+def test_free_text_with_action_word_but_no_lines_asks_llm_and_keeps_regex_reply_as_fallback(
+    pending: PendingStore,
+) -> None:
+    outcome = handle(_msg("hôm qua nhập 5 thùng cafe trứng"), NOW, pending)
+
+    assert outcome.wants_llm is True
+    assert "Chưa có dòng hàng nào" in _all_text(outcome.replies)
+
+
+def test_phieu_regex_can_read_does_not_ask_llm(pending: PendingStore) -> None:
+    outcome = handle(_msg("ngày 05/11 nhập hàng về kho tổng\nCà phê kem béo: 10"), NOW, pending)
+
+    assert outcome.wants_llm is False
+
+
+def test_ok_or_sai_without_waiting_question_does_not_ask_llm(pending: PendingStore) -> None:
+    for word in ("OK", "sai", "Sai"):
+        outcome = handle(_msg(word), NOW, pending)
+
+        assert outcome.wants_llm is False
+        assert "không có phiếu nào đang chờ" in _all_text(outcome.replies)
 
 
 def test_line_with_question_mark_tells_staff_how_to_fix(pending: PendingStore) -> None:

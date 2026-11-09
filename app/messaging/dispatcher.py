@@ -17,6 +17,8 @@ from app.parser.regex import Phieu, RawLine, parse_phieu
 ANSWERS = {"a", "b", "c"}
 MENU_WORDS = {"menu", "?"}
 HELP_WORDS = {"3", "huong dan"}
+WORD_OK, WORD_NO = "ok", "sai"
+CONFIRM_WORDS = {WORD_OK, WORD_NO}
 TEXT_ONLY_EVENTS = {"sticker", "voice", "unsupported", "other"}
 
 ROUTE_OTHER = "other"
@@ -31,6 +33,9 @@ class Outcome:
     route: str = ROUTE_OTHER
     phieu: Phieu | None = None  # đã chốt, cần ghi sổ
     origin: InboundMessage | None = None  # tin chứa phiếu gốc (khác tin hiện tại khi chốt bằng A/C)
+    wants_llm: bool = (
+        False  # regex không đọc được dòng hàng nào: worker thử LLM; không được thì dùng `replies` này
+    )
 
 
 def handle(msg: InboundMessage, now: datetime, pending: PendingStore) -> Outcome:
@@ -51,6 +56,8 @@ def handle(msg: InboundMessage, now: datetime, pending: PendingStore) -> Outcome
 def _handle_text(msg: InboundMessage, folded: str, now: datetime, pending: PendingStore) -> Outcome:
     if folded in MENU_WORDS:
         return Outcome([replies.menu()])
+    if folded in CONFIRM_WORDS:  # có bản chờ thì worker đã xử lý trước khi tới đây
+        return Outcome([replies.nothing_pending()])
     if folded == "1":
         return Outcome(replies.template_out(now))
     if folded == "2":
@@ -59,8 +66,10 @@ def _handle_text(msg: InboundMessage, folded: str, now: datetime, pending: Pendi
         return Outcome([replies.help_text()])
     phieu = parse_phieu(msg.text or "", msg.sent_at)
     if phieu is None:
-        return Outcome([replies.unknown()])
-    return _phieu_outcome(phieu, msg, now, pending)
+        return Outcome([replies.unknown()], wants_llm=True)
+    outcome = _phieu_outcome(phieu, msg, now, pending)
+    # Có chữ nhập/xuất nhưng không đọc được dòng hàng nào (tin tự do một dòng): thử LLM trước
+    return replace(outcome, wants_llm=True) if not phieu.lines else outcome
 
 
 def _phieu_outcome(phieu: Phieu, origin: InboundMessage, now: datetime, pending: PendingStore) -> Outcome:

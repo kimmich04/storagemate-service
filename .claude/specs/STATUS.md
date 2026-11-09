@@ -9,6 +9,7 @@ Every task starts as a spec here. Legend: 🔲 not started · 🟡 in progress �
 | 2026-11-01-phase0-zalo-bot-spec.md | ✅ (field ảnh chưa xác minh → integrations.md) | 2026-11-03 | 2026-11-04 | integrations, data-flow, api-contracts |
 | 2026-11-06-phase1-db-ledger-spec.md | 🟡 code + docs xong; Zalo polling ✅ (owner 07/11); còn webhook (invite spec §2.2 W10) | 2026-11-06 | 2026-11-07 | data-flow, database-design, api-contracts, integrations, directory-map, deployment |
 | 2026-11-06-phase1-invite-code-spec.md | ✅ 133 test pass; Zalo polling I1–I6 đúng (webhook: §2.2 W1–W10 chờ chạy) | 2026-11-06 | 2026-11-07 | data-flow, database-design, directory-map |
+| 2026-11-09-phase2-llm-fallback-spec.md | 🟡 code + docs xong, 152 test pass, Gemini thật ✅; còn chạy thử trên Zalo thật rồi mới ✅ | 2026-11-09 | 2026-11-09 | data-flow, database-design, integrations, directory-map |
 
 ## Roadmap (one or more specs per phase — create with `/new-spec <phase>`)
 | Phase | Goal | Est. | Spec |

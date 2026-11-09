@@ -1,5 +1,5 @@
 # Directory Map
-> last-updated: 2026-11-07
+> last-updated: 2026-11-09
 
 Domain-first layout (FastAPI "Bigger Applications" + fastapi-best-practices). Per-domain file roles:
 `.claude/rules/python-fastapi.md` §2. For live "who calls what": `graphify query "..."`.
@@ -14,13 +14,13 @@ Domain-first layout (FastAPI "Bigger Applications" + fastapi-best-practices). Pe
 | `app/auth/` | Admin login, JWT, `get_current_user` | 🖥️ `/api/auth` |
 | `app/items/` | Catalog, aliases, units | 🖥️ `/api/items` |
 | `app/staff/` | `Tenant`, `Location`, `Staff`, `InviteCode` models; `service`: `find_by_chat_id`, `create_invite`, `redeem_invite` | 🖥️ `/api/staff` (later) |
-| `app/inventory/` | Ledger, confirm (OK/Sai/Hủy), stock & transactions | 🖥️ `/api/stock`, `/api/transactions` |
+| `app/inventory/` | Ledger, confirm ✅ (`confirm.py`: bản chờ OK/Sai; Hủy chưa có), stock & transactions | 🖥️ `/api/stock`, `/api/transactions` |
 | `app/labels/` | Training-sample review | 🖥️ `/api/labels` |
 | `app/reports/` | Report service + APScheduler jobs | 🖥️ `/api/reports` |
 | `app/chat/` | Web chat demo in/out | 🖥️ `/api/chat` |
 | `app/channels/` | Zalo webhook, adapters (`base`, `zalo`, `web`), `zalo_client` | ⚡ `/webhooks/zalo` |
 | `app/messaging/` | `inbox` (enqueue/claim), `queue.process_next`, dispatcher (routing), replies | ⚙️ worker (+ `inbox.enqueue` from the webhook) |
-| `app/parser/` | regex → ner (ONNX) → llm → validate | ⚙️ worker only |
+| `app/parser/` | regex ✅ · llm ✅ (`llm.py`: Gemini → `Phieu`) · ner / validate / service: chưa có | ⚙️ worker only |
 | `app/qa/` | Manager Q&A (tools + LangChain fallback) | ⚙️ worker only |
 | `tests/` | pytest, mirrors `app/` | |
 | `alembic/` | Migrations | `0001_init` (hand-written SQL) |
