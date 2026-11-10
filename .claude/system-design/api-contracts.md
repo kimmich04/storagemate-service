@@ -49,12 +49,13 @@ client from it, so `operation_id` (`<tag>-<func>`) must stay stable. This doc is
 | GET | `/api/dashboard/low-stock` | Dashboard | Items with lowest stock / `min_qty`, + avg daily OUT (30 d); `limit` ≤ 20 |
 | GET | `/api/dashboard/tracked-items` | Dashboard | Item dropdown for the stock chart; `tracked` filter = `items.pinned` |
 | GET | `/api/dashboard/stock/{item_id}/history` | Dashboard | End-of-day stock per day (running sum of `delta_base`); `days` ≤ 90 |
-| GET | `/api/dashboard/kpis/stock-in` · `/kpis/stock-out` | Dashboard | IN / OUT count for `range` + `deltaPct` vs previous period |
-| GET | `/api/dashboard/in-out` | Dashboard | Daily IN/OUT counts for `range`, empty days = 0 |
-| GET | `/api/dashboard/staff` | Dashboard | Per staff: messages, regex-parsed %, undo count (`range`) |
+| GET | `/api/dashboard/kpis/stock-in` · `/kpis/items-in` · `/kpis/stock-out` · `/kpis/destinations` | Dashboard | Overview KPI cards, main warehouse: `month,from,to` → `{value,deltaPct}`. IN rows / distinct items IN / OUT rows / distinct destinations with OUT (unknown destination not counted). Cancelled pairs excluded. `deltaPct` vs the SAME day numbers of the previous month (clipped to its length); `null` when the previous value is 0 |
+| GET | `/api/dashboard/kpis/in-stock` | Dashboard | Overview merged stock card: `month,from,to` → `{opening,closing,total}` = items with stock > 0 at start / end of the period, over items with a ledger row; `closing`/`total` equal the Stock page cards |
+| GET | `/api/dashboard/in-out` | Dashboard | Overview bar chart: `month,from,to` → `{period,days[{date,inCount,outCount}]}`, every day in the period, empty day = 0 |
+| GET | `/api/dashboard/staff` | Dashboard | Overview staff table, main warehouse (staff whose `default_location_id` is the warehouse): `month,from,to` → `{staff[{id,name,role,messages,syntaxOkPct,undoCount}]}`; `syntaxOkPct` null = no command messages in the period; `messages` sorted desc. Replaces the old `range`/`location_id` version |
 | GET | `/api/dashboard/kpis/regex-rate` · `/kpis/retype` | Dashboard | Bot KPIs over `weeks`: regex % (+ `deltaPt`), failed-message % and count |
 | GET | `/api/dashboard/parser-quality` | Dashboard | Weekly % regex / NER / LLM / failed (sums to 100), `weeks` |
-| GET | `/api/dashboard/recent-transactions` | Dashboard | Latest `limit` (≤ 50) ledger rows, any action |
+| GET | `/api/dashboard/recent-transactions` | Dashboard | Overview: latest `limit` (1-50, default 10) IN/OUT rows of the main warehouse, mixed, independent of the period → `{items[{id,kind:"in"\|"out",name,unit,qty,eventDate,destinationName}]}` (`destinationName` only for `out` with a known destination; cancelled pairs and balancing rows excluded) |
 
 
 

@@ -150,7 +150,8 @@ def test_branch_only_counts_its_own_staff(http: TestClient, seeded: dict) -> Non
 
 # ----- staff -----
 def test_staff_table(http: TestClient, seeded: dict) -> None:
-    rows = _get(http, "staff", range=7)["staff"]
+    week = {"month": "2026-10", "from": "2026-10-25", "to": "2026-10-31"}
+    rows = _get(http, "staff", **week)["staff"]
     # Lan: 5 tin (3 regex + 1 failed + 1 hỏi đáp) → 3/4 tin lệnh là regex; hủy 1 giao dịch
     # Minh: 2 tin (llm + ner bị bấm Sai) → 0/2 regex. Sắp theo số tin giảm dần.
     assert [
@@ -159,13 +160,29 @@ def test_staff_table(http: TestClient, seeded: dict) -> None:
         (seeded["lan"], "Lan", "staff", 5, 75, 1),
         (seeded["minh"], "Minh", "manager", 2, 0, 0),
     ]
-    lan14 = _get(http, "staff", range=14)["staff"][0]
+    two_weeks = {"month": "2026-10", "from": "2026-10-18", "to": "2026-10-31"}
+    lan14 = _get(http, "staff", **two_weeks)["staff"][0]
     assert lan14["messages"] == 9 and lan14["syntaxOkPct"] == 50  # thêm tuần 19/10: 4/8 tin lệnh là regex
 
 
-def test_staff_of_branch(http: TestClient, seeded: dict) -> None:
-    rows = _get(http, "staff", location_id=2)["staff"]
-    assert [(r["name"], r["messages"], r["syntaxOkPct"]) for r in rows] == [("Vy", 5, 100)]
+def test_staff_is_main_warehouse_only(http: TestClient, seeded: dict) -> None:
+    """Vy thuộc chi nhánh 220 nên không có trong bảng của kho tổng; cả tháng 10 cho Lan 9 tin."""
+    rows = _get(http, "staff", month="2026-10")["staff"]
+    assert [r["name"] for r in rows] == ["Lan", "Minh"]
+    assert rows[0]["messages"] == 9
+
+
+def test_staff_period_with_no_messages(http: TestClient, seeded: dict) -> None:
+    rows = _get(http, "staff", month="2026-10", **{"from": "2026-10-01", "to": "2026-10-05"})["staff"]
+    assert [(r["name"], r["messages"], r["syntaxOkPct"], r["undoCount"]) for r in rows] == [
+        ("Lan", 0, None, 0),
+        ("Minh", 0, None, 0),
+    ]
+
+
+def test_staff_bad_period(http: TestClient) -> None:
+    assert http.get("/api/dashboard/staff", params={"month": "2099-01"}).status_code == 422
+    assert http.get("/api/dashboard/staff", params={"range": 7, "month": "bad"}).status_code == 422
 
 
 def test_staff_without_commands_has_null_syntax_pct(http: TestClient, db: Session) -> None:

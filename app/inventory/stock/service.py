@@ -175,6 +175,24 @@ def stock_kpis(
     return StockKpis(total_items=row[0], in_stock=row[1], variance=row[2])
 
 
+def in_stock_counts(db: Session, scope: WarehouseScope, period: Period) -> tuple[int, int, int]:
+    """[API-T5] (còn tồn đầu kỳ, còn tồn cuối kỳ, tổng mặt hàng) của Tổng quan.
+
+    Dùng đúng CTE của bảng Tồn Kho nên `closing` luôn khớp thẻ [API-S2] và `total` khớp [API-S1].
+    """
+    row = db.execute(
+        text(f"""
+            {_breakdown_cte("")}
+            SELECT count(*) FILTER (WHERE opening > 0),
+                   count(*) FILTER (WHERE closing > 0),
+                   count(*)
+            FROM filtered
+        """),
+        _params(scope, period),
+    ).one()
+    return row[0], row[1], row[2]
+
+
 def stock_destinations(db: Session, scope: WarehouseScope, period: Period) -> list[Destination]:
     """[API-S4] Mọi nơi nhận có lượt xuất trong kỳ: chi nhánh, đối tác, rồi "Chưa rõ nơi nhận" (nếu có)."""
     rows = db.execute(
