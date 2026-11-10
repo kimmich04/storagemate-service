@@ -7,13 +7,16 @@ from types import SimpleNamespace
 
 import pytest
 from alembic.config import Config
+from fastapi.testclient import TestClient
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy import Connection, Engine, create_engine
+from sqlalchemy import Connection, Engine, create_engine, text
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from alembic import command
 from app.auth.models import Admin
 from app.config import settings
+from app.database import engine, get_db
 from app.items.models import Item
 from app.items.service import db_names
 from app.main import app
@@ -30,6 +33,64 @@ TEST_LOCATIONS = [
     ("PQ", "Phú Quốc", "branch", ["pq", "phú quốc", "phu quoc"]),
     ("DT", "Đối tác / nội bộ", "partner", ["đối tác", "nội bộ"]),
 ]
+
+
+# Các file test dưới đây chạy trên DB DEMO (DATABASE_URL, đã nạp dữ liệu Excel T10/2026) với số liệu cứng.
+# CI chỉ có DB trống (TEST_DATABASE_URL) nên test dùng DB trong các file này được bỏ qua ở đó.
+DEMO_DB_FILES = {
+    "test_dashboard_bot.py",
+    "test_dashboard_in_out.py",
+    "test_dashboard_stock.py",
+    "test_stock.py",
+    "test_inbound.py",
+    "test_outbound.py",
+    "test_items.py",
+    "test_locations.py",
+}
+DEMO_DB_FIXTURES = {"db", "http", "scope_http", "seeded"}  # fixture nào chạm tới DB
+
+
+@pytest.fixture(scope="session")
+def demo_db_available() -> bool:
+    """DATABASE_URL kết nối được và đã có dữ liệu sổ kho (không nạp/đổi gì, chỉ đọc)."""
+    try:
+        with engine.connect() as conn:
+            return bool(conn.execute(text("SELECT EXISTS (SELECT 1 FROM inventory_log)")).scalar_one())
+    except SQLAlchemyError:  # không kết nối được, DB chưa migrate hoặc chưa có bảng
+        return False
+
+
+@pytest.fixture(autouse=True)
+def skip_without_demo_db(request: pytest.FixtureRequest) -> None:
+    """Bỏ qua (kèm lý do) test dùng DB demo khi môi trường không có DB demo, thay vì lỗi lúc setup."""
+    if request.node.path.name not in DEMO_DB_FILES:
+        return
+    if not DEMO_DB_FIXTURES & set(request.fixturenames):  # test thuần, không cần DB
+        return
+    if not request.getfixturevalue("demo_db_available"):
+        pytest.skip("Cần DB demo (DATABASE_URL đã nạp dữ liệu kho); môi trường này không có")
+
+
+@pytest.fixture
+def db(monkeypatch: pytest.MonkeyPatch) -> Iterator[Session]:
+    """Session trên PostgreSQL thật; mọi thay đổi trong test bị rollback. Bật admin demo cho dashboard."""
+    monkeypatch.setattr(settings, "DEV_AUTH_ENABLED", True)
+    conn = engine.connect()
+    outer = conn.begin()
+    session = Session(bind=conn, join_transaction_mode="create_savepoint")
+    app.dependency_overrides[get_db] = lambda: session
+    try:
+        yield session
+    finally:
+        app.dependency_overrides.pop(get_db, None)
+        session.close()
+        outer.rollback()
+        conn.close()
+
+
+@pytest.fixture
+def http(db: Session) -> TestClient:
+    return TestClient(app)
 
 
 @pytest.fixture

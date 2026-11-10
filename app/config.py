@@ -27,6 +27,8 @@ class Settings(BaseSettings):
     # Auth
     JWT_SECRET: str = "change-me"
     JWT_EXPIRE_MINUTES: int = 60 * 12
+    # Chỉ để demo dashboard khi chưa có login thật: lấy admin đầu tiên, KHÔNG bật ở production
+    DEV_AUTH_ENABLED: bool = False
 
     # LLM (Q&A + parser fallback)
     GEMINI_API_KEY: str = ""
