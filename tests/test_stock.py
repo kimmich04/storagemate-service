@@ -28,19 +28,6 @@ def fixed_today(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr("app.inventory.period.today_in", lambda tz: TODAY)
 
 
-@pytest.fixture(autouse=True)
-def require_demo_data(request: pytest.FixtureRequest) -> None:
-    """Test dùng DB gắn với dữ liệu demo đã nạp; DB trống thì bỏ qua kèm lý do thay vì lỗi khó hiểu."""
-    if "db" not in request.fixturenames:  # test thuần (resolve_period) không cần DB
-        return
-    db: Session = request.getfixturevalue("db")
-    loaded = db.execute(
-        text("SELECT count(*) FROM current_stock WHERE location_id = :l"), {"l": WAREHOUSE}
-    ).scalar_one()
-    if loaded == 0:
-        pytest.skip("Cần dữ liệu demo kho tổng (xem scripts/import_excel.py); DB hiện trống")
-
-
 def _get(http: TestClient, url: str, **params: object) -> dict | list:
     res = http.get(url, params=params)
     assert res.status_code == 200, res.text
