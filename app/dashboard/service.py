@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.dashboard.dependencies import DashboardScope
 from app.exceptions import NotFoundError
+from app.inventory.dependencies import WarehouseScope
 
 # Dòng "Thực xuất T10 = tồn đầu + nhập − hủy − điều chuyển…" (kho 220, 31/10) là số tính ngược để cân tồn
 # cuối tháng, KHÔNG phải lượt xuất thật → không đếm. Nếu nạp lại dữ liệu thành ADJUST thì bỏ hằng này.
@@ -430,9 +431,11 @@ class StaffStat:
     undo_count: int
 
 
-def staff_stats(db: Session, scope: DashboardScope, end: date, range_days: int) -> list[StaffStat]:
-    """Nhân viên đang hoạt động của kho: số tin, % tin lệnh đọc thẳng bằng regex, số lần hủy giao dịch."""
-    start = end - timedelta(days=range_days - 1)
+def staff_stats(
+    db: Session, scope: DashboardScope | WarehouseScope, start: date, end: date
+) -> list[StaffStat]:
+    """[API-T9] Nhân viên đang hoạt động của kho (từ `start` đến `end`, theo ngày múi giờ tenant):
+    số tin, % tin lệnh đọc thẳng bằng regex, số lần hủy giao dịch."""
     staff = db.execute(
         text(
             "SELECT id, name, role::text FROM staff "
