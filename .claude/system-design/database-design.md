@@ -1,5 +1,5 @@
 # Database Design
-> last-updated: 2026-11-04 · status: **migrated** — `alembic/versions/2026-11-04_init_schema.py` (rev `0001_init`) implements the 11-table MVP schema in `dataset/dbschema` (DBML, tenant-based). The tables section below predates it; where they differ, `dataset/dbschema` + the migration win. `app/*/models.py` are still stubs.
+> last-updated: 2026-11-09 · status: **migrated** — `alembic/versions/2026-11-04_init_schema.py` (rev `0001_init`) implements the 11-table MVP schema in `dataset/dbschema` (DBML, tenant-based). The tables section below predates it; where they differ, `dataset/dbschema` + the migration win. ORM models (2.0 `Mapped`) map the existing tables; they never create them.
 
 If this doc and the Alembic migrations diverge, the migration wins — fix this doc.
 
@@ -30,7 +30,7 @@ erDiagram
 | units | id, item_id, unit_name, factor | Unit conversion (1 thùng = 24 hộp) | items |
 | inbound_messages | id, channel, message_id, chat_id, sender_id, event_name, text, payload jsonb, received_at, status, attempts, error | Queue + dedup | messaging |
 | outbound_messages | id, chat_id, text, sent_at, zalo_message_id, status, error | Bot send log | messaging |
-| pending_actions | id, staff_id, chat_id, parsed jsonb, parser_source, confidence, expires_at, status | Await OK/Sai | inventory |
+| pending_actions | id, staff_id, chat_id, parsed jsonb, parser_source, confidence, expires_at, status | Await OK/Sai — ORM `PendingAction` (inventory/models.py); `parsed` = `Phieu` JSON (qty as string, date ISO); one `waiting` row per chat | inventory |
 | inventory_log | id, item_id, action IN/OUT, qty, unit, qty_base, event_time, received_at, staff_id, inbound_id, raw_message, parser_source, confidence, reverses_id | **Ledger, source of truth** | inventory |
 | training_samples | id, raw_message, labels, parser_source, verified, corrected_by, created_at | NER flywheel | labels |
 
@@ -51,12 +51,18 @@ staff by `zalo_chat_id`. <!-- unknown: finalize indexes when writing the first m
 ## Migrations
 `alembic revision --autogenerate -m "..."` → review → `alembic upgrade head`. Never edit an applied migration.
 Migration `0001_init` is hand-written SQL (enums, CHECKs, partial unique indexes, append-only trigger on
-`inventory_log`, RLS policies on `app.tenant_id`, view `current_stock`). ORM models are still stubs, so
-**do not run `--autogenerate` yet** — it would emit `drop_table` for every table.
+`inventory_log`, RLS policies on `app.tenant_id`, view `current_stock`). ORM models map only the columns the
+code uses (no enums/trigger/view/RLS), so **do not run `--autogenerate`** — the diff would be noise. Write migrations by hand.
 
-## Seed data (Excel T10/2026)
-`python scripts/import_excel.py [--dry-run|--reset]` loads `dataset/*.xlsx` → 1 tenant, 4 locations, items,
-units, item_aliases (`source=import`), and `inventory_log` rows (admin `import@storagemate.local`). Opening stock
-= `ADJUST`/`opening`; the gap to Excel's 31/10 closing = one month-end row (220: `OUT`, kho tổng: `ADJUST`), so
-`current_stock` matches Excel. Kho tổng → 220/PQ/đối tác is `OUT` + `counterpart_location_id`, not `TRANSFER`,
-because 220's own "Nhập" sheet already includes those goods.
+## Seed data (T10/2026) — dev DB only
+Data-only dump `seed_t10_2026.sql` (generated elsewhere by `scripts/import_excel.py`, which is **not** in this repo):
+tenant Eggyolk, 4 locations (`KT_SG` kho tổng, `220_LTT`, `PQ`, `DOI_TAC`; aliases with and without accents),
+admin `import@storagemate.local`, 359 items in 8 categories (kho tổng and 220 have separate item rows), units,
+448 item_aliases, and the October ledger (opening `ADJUST` 30/09 + `manual` IN/OUT/WASTE) — kho tổng `current_stock`
+equals Excel column "Tồn cuối 31.10" for all 123 codes (checked 2026-11-06). Load after `alembic upgrade head`:
+`psql -U storagemate -d storagemate -v ON_ERROR_STOP=1 -1 -q -f seed_t10_2026.sql` (use `-f`, not a PowerShell pipe → keeps UTF-8).
+Then `scripts/dev_db.py`: `--map-codes` (seed leaves `items.code` NULL; ids 1–123 = MÃ VT of kho tổng → the ledger
+finds items by code), `--invite NAME [--role manager]` (staff row + invite code; replaces the dashboard until it exists), `--link-staff NAME CHAT_ID` (dev shortcut, no code), optional `--fake-moves` (IN+OUT pairs,
+same item/qty, note `DỮ LIỆU ẢO (dev)`, 01/11 → yesterday, stock unchanged), `--reset` (TRUNCATE, localhost only).
+Only **kho tổng** is written by the bot: `location_id` = staff's default location; the other side is
+`counterpart_location_id` (aliases compared with `fold()`). Old Excel loader: `scripts/_archive/import_opening.py`.

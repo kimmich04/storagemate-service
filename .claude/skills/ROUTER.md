@@ -40,4 +40,4 @@ Pydantic v2, Alembic, httpx, APScheduler **3.x** (not 4), LangChain, google-gena
 ## Project commands (`.claude/commands/`)
 | Command | Does |
 |---------|------|
-| `/new-spec <phase or feature>` | Creates a spec from `_TEMPLATE-spec.md`, prefilled from the proposal, and adds it to STATUS.md |
+| `/new-spec <phase or feature>` | Creates a spec from `_TEMPLATE-spec-backend.md`, prefilled from the proposal, and adds it to STATUS.md |

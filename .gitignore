@@ -34,4 +34,8 @@ graph.json
 graph.html
 graphify-out/cache/
 
+# Dữ liệu thật của quán (Pha 0)
+data/
+tests/fixtures/*.txt
+tests/fixtures/*.xlsx
 /dataset

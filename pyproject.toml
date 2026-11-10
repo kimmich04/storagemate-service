@@ -37,6 +37,7 @@ ml = [
 dev = [
     "pytest",
     "ruff",
+    "openpyxl",             # scripts/build_catalog.py + test đối soát Excel
 ]
 
 [build-system]

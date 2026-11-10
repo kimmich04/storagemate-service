@@ -8,6 +8,7 @@ Chạy dev:  fastapi dev     (entrypoint khai báo trong pyproject.toml)
 Docs:      http://127.0.0.1:8000/docs
 OpenAPI:   http://127.0.0.1:8000/api/openapi.json  ← repo web sinh client TypeScript từ đây
 """
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.routing import APIRoute

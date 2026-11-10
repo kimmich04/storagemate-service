@@ -13,10 +13,16 @@ class Settings(BaseSettings):
     ZALO_BOT_TOKEN: str = ""
     ZALO_WEBHOOK_SECRET: str = ""
     PUBLIC_BASE_URL: str = "http://localhost:8000"
+    ZALO_API_BASE: str = "https://bot-api.zaloplatforms.com"
+    ZALO_SAMPLES_DIR: str = "data/zalo_samples"  # payload thô để tra field name (gitignored)
 
     # Database
     DATABASE_URL: str = "postgresql+psycopg://storagemate:storagemate@localhost:5432/storagemate"
     DATABASE_URL_READONLY: str = ""  # user qa_reader, chỉ SELECT, dùng cho Q&A agent
+    TEST_DATABASE_URL: str = ""  # DB riêng cho pytest (bị xoá sạch mỗi lần chạy); trống → bỏ qua test DB
+
+    # Worker
+    WORKER_POLL_SECONDS: float = 1.0  # hàng đợi rỗng thì ngủ bao lâu rồi hỏi lại
 
     # Auth
     JWT_SECRET: str = "change-me"
@@ -27,6 +33,8 @@ class Settings(BaseSettings):
     # LLM (Q&A + parser fallback)
     GEMINI_API_KEY: str = ""
     LLM_MODEL: str = ""  # tên model Gemini Flash-Lite, lấy trong Google AI Studio
+    LLM_TIMEOUT_SECONDS: float = 15.0  # quá hạn thì coi như LLM lỗi (không thử lại)
+    PENDING_TTL_MINUTES: int = 10  # thời hạn nhân viên trả OK/Sai cho bản chờ do LLM đọc
 
     # NER
     HF_MODEL_REPO: str = ""
