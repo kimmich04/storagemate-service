@@ -7,10 +7,9 @@ from fastapi import Depends
 from sqlalchemy import select
 
 from app.auth.dependencies import CurrentAdmin
-from app.auth.models import Tenant
 from app.database import DbSession
 from app.locations import service as locations_service
-from app.locations.models import Location
+from app.staff.models import Location, Tenant
 
 
 @dataclass(frozen=True)

@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.exceptions import NotFoundError
-from app.locations.models import Location
+from app.staff.models import Location
 
 
 def list_branches(db: Session, tenant_id: int) -> list[Location]:

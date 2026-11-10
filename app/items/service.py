@@ -1,8 +1,9 @@
-"""CRUD danh mục; tìm nguyên liệu theo tên/alias (dùng chung cho parser/validate.py).
+"""Danh mục mặt hàng: dựng tên lưu DB từ catalog (`db_names`) và các truy vấn đọc cho trang Danh mục.
 
-Giai đoạn này chỉ có phần ĐỌC cho trang Danh mục hàng hóa (SQL thuần như dashboard/service.py).
+Phần đọc dùng SQL thuần như dashboard/service.py. CRUD / tìm theo alias cho parser: spec sau.
 """
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 from decimal import Decimal
 
@@ -11,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.inventory.counted_rows import escape_like
 from app.paging import fetch_page
+from app.parser.catalog import CatalogItem
 
 _NO_LEDGER = "NOT EXISTS (SELECT 1 FROM inventory_log l WHERE l.item_id = i.id AND l.tenant_id = :tenant)"
 _IN_LOCATIONS = """EXISTS (SELECT 1 FROM inventory_log l WHERE l.item_id = i.id AND l.tenant_id = :tenant
@@ -187,11 +189,6 @@ def list_items(
             for r in rows
         ],
     )
-"""Danh mục mặt hàng: dựng tên lưu DB từ catalog. CRUD / tìm theo alias: spec sau."""
-
-from collections.abc import Iterable
-
-from app.parser.catalog import CatalogItem
 
 
 def db_names(catalog: Iterable[CatalogItem]) -> dict[str, str]:
