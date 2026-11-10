@@ -4,7 +4,7 @@ from datetime import datetime
 from decimal import Decimal
 
 from sqlalchemy import ForeignKey, Numeric, func
-from sqlalchemy.dialects.postgresql import ENUM
+from sqlalchemy.dialects.postgresql import ENUM, JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.auth import models as _auth  # noqa: F401 — nạp bảng đích của ForeignKey
@@ -17,6 +17,7 @@ INV_ACTION = ENUM("IN", "OUT", "WASTE", "ADJUST", "TRANSFER", "PRODUCE", name="i
 PARSER_SOURCE = ENUM(
     "regex", "ner", "llm", "manual", "opening", "undo", name="parser_source", create_type=False
 )
+PENDING_STATUS = ENUM("waiting", "confirmed", "rejected", "expired", name="pending_status", create_type=False)
 QTY = Numeric(14, 3)
 
 
@@ -42,3 +43,22 @@ class InventoryLog(Base):
     parser_source: Mapped[str] = mapped_column(PARSER_SOURCE)
     reverses_id: Mapped[int | None] = mapped_column(ForeignKey("inventory_log.id"))
     note: Mapped[str | None]
+
+
+class PendingAction(Base):
+    """Phiếu do LLM/NER đọc, chờ nhân viên trả OK/Sai — mỗi chat chỉ một bản 'waiting' (unique index)."""
+
+    __tablename__ = "pending_actions"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tenant_id: Mapped[int] = mapped_column(ForeignKey("tenants.id"))
+    staff_id: Mapped[int] = mapped_column(ForeignKey("staff.id"))
+    chat_id: Mapped[str]
+    inbound_id: Mapped[int] = mapped_column(ForeignKey("inbound_messages.id"))
+    parsed: Mapped[dict] = mapped_column(JSONB)  # Phieu dạng JSON, xem inventory/confirm.py
+    parser_source: Mapped[str] = mapped_column(PARSER_SOURCE)
+    confidence: Mapped[Decimal | None] = mapped_column(Numeric(4, 3))
+    status: Mapped[str] = mapped_column(PENDING_STATUS, server_default="waiting")
+    expires_at: Mapped[datetime]
+    resolved_at: Mapped[datetime | None]
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())

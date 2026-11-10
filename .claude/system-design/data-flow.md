@@ -1,5 +1,5 @@
 # Data Flow
-> last-updated: 2026-11-07 · source: `docs/storagemate-proposal-plan-v2.md` §Luồng hệ thống
+> last-updated: 2026-11-09 · source: `docs/storagemate-proposal-plan-v2.md` §Luồng hệ thống
 
 The runtime story. 8 flows: bot setup (once), staff linking, message processing (main), confirm/cancel,
 manager Q&A, scheduled reports, dashboard, flywheel. Business limits are named constants in code.
@@ -106,6 +106,18 @@ sequenceDiagram
 - `route` on `inbound_messages`: `phieu` · `phieu_partial` · `phieu_rejected` · `phieu_waiting` (A/B/C asked) ·
   `phieu_answer` (the "a"/"c" reply; ledger rows point to the **original** phiếu message) · `unlinked` · `other`.
   Phase 2 re-parses `text` of `phieu_partial` rows to send skipped lines to NER/LLM.
+- **LLM fallback (Phase 2a, regex → LLM; NER chưa có).** Dispatcher sets `Outcome.wants_llm` when `parse_phieu` returns
+  `None` or finds a header but **zero lines** (free text such as "hôm qua nhập 10 hộp cà phê"). Worker then calls
+  `parser/llm.py` (`await llm.parse`, Gemini structured output → `Phieu`). Read → row in `pending_actions`
+  (`parser_source='llm'`, TTL `PENDING_TTL_MINUTES`) + summary asking **OK/Sai**; **nothing is written yet**
+  (route `llm_waiting`). Not read / LLM off / error / timeout → the regex reply is sent (`unknown` or "Chưa có dòng hàng nào").
+- **OK/Sai** are checked in `queue._answer_pending` *before* the dispatcher: `OK` → `ledger.record(source='llm')` + pending
+  `confirmed` (original message route = ledger result, the `OK` message = `phieu_answer`); `Sai` → `rejected`
+  (`llm_rejected`); after TTL → `expired` (`llm_expired`); any other message expires the pending and is handled normally.
+  `OK`/`Sai` with nothing waiting → "không có phiếu nào đang chờ" (no LLM call).
+- LLM phieu goes through the same `catalog.resolve` + `ledger.record` checks (unknown item, unit, stock, ≤ 7 days); duplicate
+  lines (A/B/C) are not asked for LLM phiếu — staff sees them in the summary and answers `Sai`. The LLM call happens while the
+  inbound row is locked (one worker, `LLM_TIMEOUT_SECONDS`, no retry).
 - `PendingStore` (A/B/C, 10 min) still lives in worker RAM — fine with one worker, lost on restart.
 - Zalo does not redeliver → messages sent while the server is down are lost (integrations.md).
 

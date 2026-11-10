@@ -27,10 +27,14 @@ class Settings(BaseSettings):
     # Auth
     JWT_SECRET: str = "change-me"
     JWT_EXPIRE_MINUTES: int = 60 * 12
+    # Chỉ để demo dashboard khi chưa có login thật: lấy admin đầu tiên, KHÔNG bật ở production
+    DEV_AUTH_ENABLED: bool = False
 
     # LLM (Q&A + parser fallback)
     GEMINI_API_KEY: str = ""
     LLM_MODEL: str = ""  # tên model Gemini Flash-Lite, lấy trong Google AI Studio
+    LLM_TIMEOUT_SECONDS: float = 15.0  # quá hạn thì coi như LLM lỗi (không thử lại)
+    PENDING_TTL_MINUTES: int = 10  # thời hạn nhân viên trả OK/Sai cho bản chờ do LLM đọc
 
     # NER
     HF_MODEL_REPO: str = ""

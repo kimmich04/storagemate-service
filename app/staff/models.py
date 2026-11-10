@@ -18,6 +18,7 @@ class Tenant(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
     timezone: Mapped[str] = mapped_column(server_default="Asia/Ho_Chi_Minh")
+    archived_at: Mapped[datetime | None]
 
 
 class Location(Base):
@@ -30,6 +31,7 @@ class Location(Base):
     kind: Mapped[str] = mapped_column(LOCATION_KIND)
     # alias có thể có dấu (seed T10); ledger so bằng fold()
     aliases: Mapped[list[str]] = mapped_column(ARRAY(Text), server_default="{}")
+    archived_at: Mapped[datetime | None]
 
 
 class Staff(Base):

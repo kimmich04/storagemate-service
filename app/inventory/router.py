@@ -1,25 +1,28 @@
-"""🖥️ /api/stock và /api/transactions — UI xem tồn và lịch sử."""
+"""🖥️ Gom router của domain inventory cho api.py: /api/period, /api/stock, /api/transactions.
 
-from fastapi import APIRouter, Depends
+Code từng trang nằm ở subfolder: stock/ (Tồn Kho), transactions/inbound, transactions/outbound (sau này).
+"""
 
-from app.auth.dependencies import get_current_user
+from fastapi import APIRouter
 
-stock_router = APIRouter(
-    prefix="/stock",
-    tags=["stock"],
-    dependencies=[Depends(get_current_user)],
-)
+from app.database import DbSession
+from app.inventory import period as period_service
+from app.inventory.dependencies import Scope
+from app.inventory.period import PeriodOptionsRead, SelectedPeriod
+from app.inventory.stock.router import router as stock_router  # noqa: F401  (re-export cho api.py: /api/stock)
 
-# TODO — endpoint theo plan:
-#   GET /api/stock   tồn hiện tại (view current_stock)
+period_router = APIRouter(prefix="/period", tags=["period"])
 
 
-transactions_router = APIRouter(
-    prefix="/transactions",
-    tags=["transactions"],
-    dependencies=[Depends(get_current_user)],
-)
+@period_router.get("")
+def get_period(db: DbSession, scope: Scope, period: SelectedPeriod) -> PeriodOptionsRead:
+    """[API-P0] Bộ lọc kỳ dùng chung 5 trang: tháng dương + khoảng ngày (plan mục 0).
 
-# TODO — endpoint theo plan:
-#   GET  /api/transactions                lịch sử nhập/xuất, lọc theo nguyên liệu, nhân viên, ngày
-#   POST /api/transactions/{id}/reverse   tạo bản ghi bù trừ
+    Trả danh sách tháng chọn được (`months`), kỳ đã chuẩn hóa (`from`, `to`) và biên chọn ngày
+    (`minDate`, `maxDate`). Vi phạm ràng buộc → 422 `{code: "invalid_period", message}`.
+    """
+    return period_service.period_options(db, scope, period)
+
+
+# /api/transactions (Nhập Kho; Xuất Kho sau này) — code ở transactions/
+from app.inventory.transactions.router import router as transactions_router  # noqa: E402,F401

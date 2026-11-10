@@ -1,5 +1,5 @@
 # Database Design
-> last-updated: 2026-11-07 · status: **migrated** — `alembic/versions/2026-11-04_init_schema.py` (rev `0001_init`) implements the 11-table MVP schema in `dataset/dbschema` (DBML, tenant-based). The tables section below predates it; where they differ, `dataset/dbschema` + the migration win. ORM models (2.0 `Mapped`) map the existing tables; they never create them.
+> last-updated: 2026-11-09 · status: **migrated** — `alembic/versions/2026-11-04_init_schema.py` (rev `0001_init`) implements the 11-table MVP schema in `dataset/dbschema` (DBML, tenant-based). The tables section below predates it; where they differ, `dataset/dbschema` + the migration win. ORM models (2.0 `Mapped`) map the existing tables; they never create them.
 
 If this doc and the Alembic migrations diverge, the migration wins — fix this doc.
 
@@ -30,7 +30,7 @@ erDiagram
 | units | id, item_id, unit_name, factor | Unit conversion (1 thùng = 24 hộp) | items |
 | inbound_messages | id, channel, message_id, chat_id, sender_id, event_name, text, payload jsonb, received_at, status, attempts, error | Queue + dedup | messaging |
 | outbound_messages | id, chat_id, text, sent_at, zalo_message_id, status, error | Bot send log | messaging |
-| pending_actions | id, staff_id, chat_id, parsed jsonb, parser_source, confidence, expires_at, status | Await OK/Sai | inventory |
+| pending_actions | id, staff_id, chat_id, parsed jsonb, parser_source, confidence, expires_at, status | Await OK/Sai — ORM `PendingAction` (inventory/models.py); `parsed` = `Phieu` JSON (qty as string, date ISO); one `waiting` row per chat | inventory |
 | inventory_log | id, item_id, action IN/OUT, qty, unit, qty_base, event_time, received_at, staff_id, inbound_id, raw_message, parser_source, confidence, reverses_id | **Ledger, source of truth** | inventory |
 | training_samples | id, raw_message, labels, parser_source, verified, corrected_by, created_at | NER flywheel | labels |
 
