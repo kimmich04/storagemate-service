@@ -39,7 +39,7 @@ TEST_LOCATIONS = [
 # CI chỉ có DB trống (TEST_DATABASE_URL) nên test dùng DB trong các file này được bỏ qua ở đó.
 DEMO_DB_FILES = {
     "test_dashboard_bot.py",
-    "test_dashboard_in_out.py",
+    "test_overview.py",
     "test_dashboard_stock.py",
     "test_stock.py",
     "test_inbound.py",
