@@ -20,7 +20,7 @@ sequenceDiagram
   participant W as worker
   participant DB as postgres
   A->>API: POST /api/staff/{id}/invite
-  API->>DB: invite_codes (6 chars, 1-use, TTL 24h)
+  API->>DB: invite_codes (6 chars, 1-use, no expiry)
   API-->>A: code + bot deeplink/QR
   S->>W: (via Zalo) "K7P2Q9"
   W->>DB: chat_id unlinked → check code
@@ -104,13 +104,16 @@ sequenceDiagram
 - Every row: `location_id` = staff's default location (kho tổng); the other side → `counterpart_location_id`
   (no match → NULL). Only kho tổng stock is tracked.
 - `route` on `inbound_messages`: `phieu` · `phieu_partial` · `phieu_rejected` · `phieu_waiting` (A/B/C asked) ·
-  `phieu_answer` (the "a"/"c" reply; ledger rows point to the **original** phiếu message) · `unlinked` · `other`.
+  `phieu_answer` (the "a"/"c" reply; ledger rows point to the **original** phiếu message) · `unlinked` · `other` ·
+  `llm_waiting` · `llm_rejected` · `llm_expired` · `qa` · `qa_forbidden` · `invite_ok` · `invite_failed`.
   Phase 2 re-parses `text` of `phieu_partial` rows to send skipped lines to NER/LLM.
 - **LLM fallback (Phase 2a, regex → LLM; NER chưa có).** Dispatcher sets `Outcome.wants_llm` when `parse_phieu` returns
   `None` or finds a header but **zero lines** (free text such as "hôm qua nhập 10 hộp cà phê"). Worker then calls
-  `parser/llm.py` (`await llm.parse`, Gemini structured output → `Phieu`). Read → row in `pending_actions`
+  `parser/llm.py` (`await llm.parse`, Gemini structured output → `LlmRead(intent, phieu)`). **One call both classifies
+  and extracts**: `intent` = `phieu` | `cau_hoi` | `khac`. `phieu` with action + lines → row in `pending_actions`
   (`parser_source='llm'`, TTL `PENDING_TTL_MINUTES`) + summary asking **OK/Sai**; **nothing is written yet**
-  (route `llm_waiting`). Not read / LLM off / error / timeout → the regex reply is sent (`unknown` or "Chưa có dòng hàng nào").
+  (route `llm_waiting`). `cau_hoi` → manager Q&A (§5). `khac` / LLM off / error / timeout → the regex reply is sent
+  (`unknown` or "Chưa có dòng hàng nào").
 - **OK/Sai** are checked in `queue._answer_pending` *before* the dispatcher: `OK` → `ledger.record(source='llm')` + pending
   `confirmed` (original message route = ledger result, the `OK` message = `phieu_answer`); `Sai` → `rejected`
   (`llm_rejected`); after TTL → `expired` (`llm_expired`); any other message expires the pending and is handled normally.
@@ -129,12 +132,21 @@ sequenceDiagram
   After that only manager via dashboard — still a reversing row. **Never UPDATE/DELETE the ledger.**
 - No buttons in Bot API → confirmation is typed text.
 
-## 5. Manager Q&A
-- Manager role only (staff → help text).
-- LLM tool calling over fixed tools: `get_stock(item)`, `get_movements(item, from, to, action)`,
-  `top_items(period)`, `staff_activity(period)`; else LangChain SQL agent fallback.
-- Runs as `qa_reader` role: SELECT on business views only (no `admins`, `staff`), `statement_timeout` 5 s, ≤ 200 rows.
-- Reply ≤ 2,000 chars (sendMessage limit) → split or send dashboard link.
+## 5. Manager Q&A (Phase 3 step 1: read-only tools — spec `2026-11-15-phase3-qa-agent-readonly`)
+- Entry: LLM parser returned `intent = cau_hoi` (§3). Permission is checked on `staff.role` from the DB, never on the
+  intent: staff → `qa_forbidden` reply (route `qa_forbidden`), no agent call.
+- `app/qa/service.QaAgent`: hand-written loop — Gemini `bind_tools` → run tool → `ToolMessage` → repeat, at most
+  `QA_MAX_STEPS` model calls and `QA_TIMEOUT_SECONDS` in total. Gemini's own `AIMessage` is appended back unchanged.
+- Tools (`app/qa/tools.py`): `FindItems`, `GetStock`, `GetMovements`, `TopItems`, `StaffActivity`. Gemini fills only
+  arguments (Pydantic-validated); tenant, today and the DB connection come from code. Bad args / unknown location /
+  date range > 92 days → `{"error": …}` back to Gemini so it can correct itself.
+- Each tool call = one short transaction on the **`qa_reader` login** (`DATABASE_URL_READONLY`): `set_config
+  ('app.tenant_id')` + `statement_timeout 5s` → SELECT on `qa_*` views → ROLLBACK. No connection held while waiting
+  for Gemini. ≤ 50 rows per tool.
+- Answer → route `qa`, sent as plain text (`parse_mode=None`), cut at 2,000 chars. Any failure (Gemini error, rate
+  limit, timeout, max steps, DB) → `None` → the regex "chưa hiểu" reply; the inbound row is still `done`.
+- Q&A off when `GEMINI_API_KEY`, `LLM_MODEL` or `DATABASE_URL_READONLY` is missing — never falls back to `DATABASE_URL`.
+- Not yet: SQL agent fallback (needs its own spec; LLM-written SQL), conversation memory, `Tồn <tên>` shortcut.
 
 ## 6. Scheduled reports
 - APScheduler inside the (single) worker, `Asia/Ho_Chi_Minh`: daily 21:30, monthly 07:00 on day 1;

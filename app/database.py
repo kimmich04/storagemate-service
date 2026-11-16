@@ -24,3 +24,11 @@ def get_db() -> Generator[Session, None, None]:
 
 
 DbSession = Annotated[Session, Depends(get_db)]
+
+
+def build_readonly_sessionmaker() -> sessionmaker[Session] | None:
+    """Kết nối riêng bằng login qa_reader cho Q&A. Trống → None (Q&A tắt), KHÔNG lùi về DATABASE_URL."""
+    if not settings.DATABASE_URL_READONLY:
+        return None
+    readonly = create_engine(settings.DATABASE_URL_READONLY, pool_pre_ping=True, pool_size=2, max_overflow=0)
+    return sessionmaker(bind=readonly, autoflush=False)

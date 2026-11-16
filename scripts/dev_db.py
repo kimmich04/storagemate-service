@@ -190,8 +190,7 @@ def main(argv: list[str]) -> int:
     if args.invite:
         with SessionLocal.begin() as session:
             staff, code = invite(session, args.invite, args.role, datetime.now(LOCAL_TZ))
-            expires = code.expires_at.astimezone(LOCAL_TZ)
-            print(f"Mã mời cho {staff.name}: {code.code} (hết hạn {expires:%d/%m %H:%M})")
+            print(f"Mã mời cho {staff.name} ({staff.role}): {code.code} (không hết hạn, dùng 1 lần)")
     if args.link_staff:
         with SessionLocal.begin() as session:
             staff = link_staff(session, *args.link_staff)

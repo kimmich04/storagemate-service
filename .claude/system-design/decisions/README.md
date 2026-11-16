@@ -14,6 +14,8 @@ write a new one that supersedes it.
 | 0005 | Append-only inventory ledger with reversing rows | Accepted | 2026-11-01 |
 | 0006 | Regex-first parser cascade; NER/LLM reads need human OK | Accepted | 2026-11-01 |
 | 0007 | Host api + worker + DB on a laptop via Compose + ngrok | Accepted | 2026-11-01 |
+| 0008 | Manager Q&A as a tool-calling agent on a separate read-only login | Accepted | 2026-11-15 |
+| 0009 | Invite codes do not expire (supersedes 24 h TTL in 0004) | Accepted | 2026-11-15 |
 
 Pending (decide later, then write an ADR): LLM provider (Phase 2) · split NER into its own service.
 

@@ -10,6 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.channels.base import InboundMessage
+from app.config import settings
 from app.inventory.models import InventoryLog
 from app.messaging import inbox
 from app.messaging.models import InboundMessage as InboundRow
@@ -22,7 +23,7 @@ from tests.fakes import FakeSender
 pytestmark = pytest.mark.anyio
 
 NOW = datetime(2026, 11, 6, 15, 0, tzinfo=ZoneInfo("Asia/Ho_Chi_Minh"))
-REJECTED = "❌ Mã mời không đúng hoặc đã hết hạn"
+REJECTED = "❌ Mã mời không đúng hoặc đã được dùng"
 
 
 def _new_staff(db: Session, seeded: SimpleNamespace, name: str = "Hoa", active: bool = True) -> Staff:
@@ -182,8 +183,35 @@ def test_create_invite_revokes_previous_unused_code(db_session: Session, seeded:
     second = staff_service.create_invite(db_session, staff, NOW + timedelta(minutes=5))
 
     assert first.revoked_at == NOW + timedelta(minutes=5)
-    assert second.revoked_at is None and second.expires_at == NOW + timedelta(minutes=5, hours=24)
+    assert second.revoked_at is None and second.expires_at is None
     assert staff_service.CODE_RE.fullmatch(second.code)
+
+
+async def test_used_code_relinks_staff_to_new_chat_when_reuse_enabled_for_dev(
+    session_factory: Callable[[], Session],
+    db_session: Session,
+    seeded: SimpleNamespace,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(settings, "INVITE_REUSABLE", True)
+    staff = _new_staff(db_session, seeded)
+    code = staff_service.create_invite(db_session, staff, NOW).code
+    await _send(session_factory, db_session, code, chat_id="phone-1", msg_id="m1")
+
+    row, _ = await _send(session_factory, db_session, code, chat_id="phone-2", msg_id="m2")
+
+    assert row.route == "invite_ok" and staff.zalo_chat_id == "phone-2"
+
+
+async def test_code_still_works_long_after_it_was_created(
+    session_factory: Callable[[], Session], db_session: Session, seeded: SimpleNamespace
+) -> None:
+    staff = _new_staff(db_session, seeded)
+    code = staff_service.create_invite(db_session, staff, NOW - timedelta(days=90)).code
+
+    row, _ = await _send(session_factory, db_session, code)
+
+    assert row.route == "invite_ok" and staff.zalo_chat_id == "chat-new"
 
 
 @pytest.mark.parametrize(

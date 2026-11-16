@@ -58,7 +58,7 @@ class InviteCode(Base):
     tenant_id: Mapped[int] = mapped_column(ForeignKey("tenants.id"))
     staff_id: Mapped[int] = mapped_column(ForeignKey("staff.id"))
     code: Mapped[str]
-    expires_at: Mapped[datetime]
+    expires_at: Mapped[datetime | None]  # NULL = không hết hạn (mặc định từ 0004)
     used_at: Mapped[datetime | None]
     revoked_at: Mapped[datetime | None]
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())

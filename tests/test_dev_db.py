@@ -1,7 +1,7 @@
 """scripts/dev_db.py: gán code cho món seed, gắn nhân viên, dữ liệu ảo không đổi tồn."""
 
 import importlib.util
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
 from types import ModuleType, SimpleNamespace
@@ -99,7 +99,7 @@ def test_invite_creates_unlinked_staff_and_valid_code(
         None,
         seeded.locations["KT"].id,
     )
-    assert code.expires_at == now + timedelta(hours=24)
+    assert code.expires_at is None
 
 
 def test_invite_same_name_reuses_staff_and_revokes_old_code(

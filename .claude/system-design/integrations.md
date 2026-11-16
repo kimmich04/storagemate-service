@@ -1,5 +1,5 @@
 # Integrations
-> last-updated: 2026-11-09
+> last-updated: 2026-11-15
 
 External services and tools. Env var NAMES only — never values. Names match `app/config.py` + `.env.example`.
 
@@ -7,7 +7,7 @@ External services and tools. Env var NAMES only — never values. Names match `a
 | Service | Used for | Auth (env var) | Failure mode |
 |---------|----------|----------------|--------------|
 | Zalo Bot Platform (beta) | 1:1 chat in/out | `ZALO_BOT_TOKEN`, `ZALO_WEBHOOK_SECRET` | Beta rules may change; max 3 bots/account (1 dev, 1 demo); error table in api-contracts.md |
-| LLM (Gemini Flash-Lite; verified live 2026-11-09 with `gemini-3.5-flash-lite`) | Parser fallback (structured output via `langchain-google-genai` 4.x, `with_structured_output(LlmPhieu)`), Q&A tool calling (chưa làm) | `GEMINI_API_KEY`, `LLM_MODEL`, `LLM_TIMEOUT_SECONDS` (15), `PENDING_TTL_MINUTES` (10) | Key/model blank → LLM tier off. Error, timeout, quota 429, schema violation → `None` → regex reply (no retry; only the error class is logged). Model ignores `temperature` (don't set it) |
+| LLM (Gemini Flash-Lite; verified live 2026-11-09 with `gemini-3.5-flash-lite`) | Parser fallback + intent (structured output via `langchain-google-genai` 4.x, `with_structured_output(LlmPhieu)` → `intent` phieu/cau_hoi/khac); manager Q&A tool calling (`bind_tools` with 5 Pydantic tool schemas, verified live 2026-11-15: 12/12 sample questions correct against T10 data) | `GEMINI_API_KEY`, `LLM_MODEL`, `LLM_TIMEOUT_SECONDS` (15, per call), `PENDING_TTL_MINUTES` (10), `QA_TIMEOUT_SECONDS` (30, whole question), `QA_MAX_STEPS` (5) | Key/model blank → LLM tier and Q&A off. Error, timeout, quota 429 (`GoogleRateLimitError`, hit on the free tier during the 12-question run), schema violation → parser `intent=khac` / Q&A `None` → regex reply (no retry; only the error class is logged). Q&A appends Gemini's own `AIMessage` back unchanged (thought signatures). Model ignores `temperature` (don't set it) |
 | Hugging Face Hub | NER `.onnx` versions | `HF_MODEL_REPO` (+ `NER_MODEL_PATH` local) | Missing model → cascade skips NER (regex → LLM) |
 | ngrok (free dev domain) | Fixed HTTPS URL for webhook + dashboard API | `PUBLIC_BASE_URL` | 20k req + 1 GB/month; browser warning page; laptop off = bot offline |
 | Vercel | Hosts the dashboard (separate repo) | `CORS_ORIGINS` here | — |
