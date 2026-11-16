@@ -4,16 +4,16 @@ import logging
 import re
 import secrets
 import string
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
+from app.config import settings
 from app.staff.models import InviteCode, Staff
 
 logger = logging.getLogger(__name__)
 
-INVITE_TTL = timedelta(hours=24)
 CODE_ALPHABET = string.ascii_uppercase + string.digits
 CODE_LENGTH = 6
 CODE_RE = re.compile(rf"[A-Z0-9]{{{CODE_LENGTH}}}")  # khớp CHECK của bảng invite_codes
@@ -32,15 +32,13 @@ def normalize_code(text: str | None) -> str | None:
 
 
 def create_invite(session: Session, staff: Staff, now: datetime) -> InviteCode:
-    """Mỗi nhân viên chỉ còn 1 mã hiệu lực: mã cũ chưa dùng bị thu hồi."""
+    """Mỗi nhân viên chỉ còn 1 mã hiệu lực: mã cũ chưa dùng bị thu hồi. Mã không hết hạn (ADR 0009)."""
     unused = select(InviteCode).where(
         InviteCode.staff_id == staff.id, InviteCode.used_at.is_(None), InviteCode.revoked_at.is_(None)
     )
     for old in session.scalars(unused):
         old.revoked_at = now
-    invite = InviteCode(
-        tenant_id=staff.tenant_id, staff_id=staff.id, code=_unused_code(session), expires_at=now + INVITE_TTL
-    )
+    invite = InviteCode(tenant_id=staff.tenant_id, staff_id=staff.id, code=_unused_code(session))
     session.add(invite)
     session.flush()
     return invite
@@ -67,7 +65,9 @@ def redeem_invite(
     if found is None:
         return None
     invite, staff = found
-    if invite.used_at or invite.revoked_at or invite.expires_at <= now or not staff.active:
+    expired = invite.expires_at is not None and invite.expires_at <= now
+    used_up = invite.used_at is not None and not settings.INVITE_REUSABLE
+    if used_up or invite.revoked_at or expired or not staff.active:
         return None
     user_id = sender_id or None
     if not _release_from_former_staff(session, staff, chat_id, user_id):

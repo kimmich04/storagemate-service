@@ -9,7 +9,7 @@ import pytest
 from alembic.config import Config
 from fastapi.testclient import TestClient
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy import Connection, Engine, create_engine, text
+from sqlalchemy import Connection, Engine, create_engine, event, text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
@@ -131,6 +131,25 @@ def db_connection(db_engine: Engine) -> Iterator[Connection]:
 @pytest.fixture
 def session_factory(db_connection: Connection) -> Callable[[], Session]:
     return lambda: Session(bind=db_connection, join_transaction_mode="create_savepoint")
+
+
+@pytest.fixture
+def qa_session_factory(db_connection: Connection) -> Callable[[], Session]:
+    """Giả lập login qa_reader trên DB test: cùng role, cùng quyền — đổi vai ngay sau mỗi BEGIN (savepoint).
+
+    Rollback savepoint ở cuối qa.tools.read_only_session trả lại vai cũ cho phần còn lại của test.
+    """
+
+    def make() -> Session:
+        session = Session(bind=db_connection, join_transaction_mode="create_savepoint")
+        event.listen(session, "after_begin", _as_qa_reader)
+        return session
+
+    return make
+
+
+def _as_qa_reader(session: Session, transaction: object, connection: Connection) -> None:
+    connection.exec_driver_sql("SET LOCAL ROLE qa_reader")
 
 
 @pytest.fixture

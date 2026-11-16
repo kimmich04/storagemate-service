@@ -1,12 +1,32 @@
 # Database Design
-> last-updated: 2026-11-09 · status: **migrated** — `alembic/versions/2026-11-04_init_schema.py` (rev `0001_init`) implements the 11-table MVP schema in `dataset/dbschema` (DBML, tenant-based). The tables section below predates it; where they differ, `dataset/dbschema` + the migration win. ORM models (2.0 `Mapped`) map the existing tables; they never create them.
+> last-updated: 2026-11-15 · status: **migrated** — `alembic/versions/2026-11-04_init_schema.py` (rev `0001_init`) implements the 11-table MVP schema in `dataset/dbschema` (DBML, tenant-based). The tables section below predates it; where they differ, `dataset/dbschema` + the migration win. ORM models (2.0 `Mapped`) map the existing tables; they never create them.
 
 If this doc and the Alembic migrations diverge, the migration wins — fix this doc.
 
 ## Engine & access
 PostgreSQL 16 via SQLAlchemy 2.0 sync + psycopg 3 (`app/database.py`, `pool_pre_ping`). Alembic migrations.
-Two roles: app (`DATABASE_URL`) and `qa_reader` (`DATABASE_URL_READONLY`, SELECT on business views only,
-`statement_timeout` 5 s, max 200 rows). Constraint names from `NAMING_CONVENTION` in `app/models.py`.
+Two logins: app (`DATABASE_URL`, owner of the tables, bypasses RLS → services always filter `tenant_id`) and
+`qa_reader` (`DATABASE_URL_READONLY`, used only by the Q&A agent). Constraint names from `NAMING_CONVENTION` in `app/models.py`.
+
+### `qa_reader` + `qa_*` views (migration `0003_qa_reader`)
+- Role created `NOLOGIN` by the migration (cluster-wide, kept on downgrade); the owner enables it once by hand:
+  `ALTER ROLE qa_reader WITH LOGIN PASSWORD '…'` — no password in the repo. Role defaults: `statement_timeout 5s`,
+  `default_transaction_read_only on`. The app user is **not** a member of `qa_reader` (the app never switches role).
+- `GRANT SELECT` only on 4 views; no privilege on any base table (`staff`, `admins`, `inbound_messages`, `inventory_log`…).
+
+| View | Columns | Source |
+|------|---------|--------|
+| `qa_items` | item_id, code, name, category, base_unit, min_qty, aliases[] | items (not archived) + approved item_aliases |
+| `qa_locations` | location_id, code, name, kind, aliases | locations (not archived) |
+| `qa_stock` | item_id, item_name, base_unit, min_qty, location_code, location_name, qty_base, last_event_time | inventory_log grouped by item, location |
+| `qa_movements` | log_id, event_time, action, item, location, counterpart, qty, unit, qty_base, delta_base, staff_name, reverses_id | inventory_log + items, locations, staff.name |
+
+- **Why the views filter tenant themselves (no `security_invoker`)**: they run with the owner's rights, so `qa_reader`
+  needs no grant on base tables, and only `staff.name` leaks through `qa_movements`. Every view has
+  `WHERE tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::bigint` → no setting = no rows (fail closed).
+  Supabase's advisor may flag "security definer view"; accepted, since `anon`/`authenticated` get no grant (0002).
+- Tests cannot log in as `qa_reader` (no password in CI), so the fixture `qa_session_factory` runs
+  `SET LOCAL ROLE qa_reader` after each BEGIN on the (superuser) test connection — same role, same grants.
 
 ## ERD
 ```mermaid
@@ -42,7 +62,9 @@ View `current_stock`: `items LEFT JOIN inventory_log`, `SUM(IN qty_base) − SUM
 - `qty > 0`; OUT must not make stock negative (checked in validate before insert).
 - `event_time` ≤ now and ≥ now − 7 days; `event_time` (from text) separate from `received_at` (webhook).
 - Quantities `NUMERIC`, times `timestamptz`. `qty_base` stored in the item's base unit.
-- Invite codes: 6 chars, single use, 24 h TTL; >5 failures in 15 min → lock chat_id.
+- Invite codes: 6 chars, single use, **no expiry** (`expires_at` NULL since `0004_invite_no_expiry`, ADR 0009);
+  creating a new code revokes the staff member's unused one. >5 failures in 15 min → lock chat_id (Phase 4, not built).
+  Dev only: `INVITE_REUSABLE=true` skips the single-use check (`used_at` = last use); off by default.
 
 ## Indexing & performance notes
 1 shop, low volume. Expected hot paths: queue claim (`status`, `received_at`), ledger by `item_id`/`event_time`,

@@ -19,8 +19,9 @@ from app.messaging.dispatcher import Outcome
 from app.messaging.models import InboundMessage as InboundRow
 from app.messaging.pending import PendingStore
 from app.messaging.queue import process_next
+from app.parser.llm import LlmRead
 from app.parser.regex import Phieu, RawLine
-from tests.fakes import FakeLlm, FakeSender
+from tests.fakes import FakeLlm, FakeQa, FakeSender
 
 pytestmark = pytest.mark.anyio
 
@@ -280,3 +281,82 @@ async def test_phieu_regex_can_read_never_calls_llm(
 
     assert llm.calls == []
     assert [e.parser_source for e in _ledger(db_session)] == ["regex"]
+
+
+QUESTION = "kho tổng còn bao nhiêu trứng"
+ASKS_QUESTION = LlmRead("cau_hoi")
+
+
+async def _ask_as(
+    session_factory, db: Session, seeded: SimpleNamespace, role: str, llm: FakeLlm, qa: FakeQa | None
+) -> FakeSender:
+    seeded.staff.role = role
+    db.flush()
+    _enqueue(db, QUESTION, message_id="q1")
+    sender = FakeSender()
+    await process_next(session_factory, sender, PendingStore(), now=NOW, llm=llm, qa=qa)
+    db.expire_all()
+    return sender
+
+
+async def test_manager_question_is_answered_by_qa_without_touching_ledger(
+    session_factory: Callable[[], Session], db_session: Session, seeded: SimpleNamespace
+) -> None:
+    llm, qa = FakeLlm(ASKS_QUESTION), FakeQa("Kho tổng còn 30 quả trứng.")
+
+    sender = await _ask_as(session_factory, db_session, seeded, "manager", llm, qa)
+
+    assert llm.calls == [QUESTION]
+    assert qa.calls == [{"question": QUESTION, "tenant_id": seeded.tenant.id, "staff_name": "Lan"}]
+    assert sender.messages() == ["Kho tổng còn 30 quả trứng."]
+    assert (_row(db_session, "q1").status, _row(db_session, "q1").route) == ("done", "qa")
+    assert _ledger(db_session) == [] and _pending(db_session) == []
+
+
+async def test_staff_question_is_refused_without_calling_qa(
+    session_factory: Callable[[], Session], db_session: Session, seeded: SimpleNamespace
+) -> None:
+    qa = FakeQa()
+
+    sender = await _ask_as(session_factory, db_session, seeded, "staff", FakeLlm(ASKS_QUESTION), qa)
+
+    assert qa.calls == []
+    assert "Chỉ quản lý" in "\n".join(sender.messages())
+    assert _row(db_session, "q1").route == "qa_forbidden"
+
+
+@pytest.mark.parametrize(
+    ("llm", "qa"),
+    [
+        (FakeLlm(None), FakeQa()),
+        (FakeLlm(ASKS_QUESTION), FakeQa(None)),
+        (FakeLlm(ASKS_QUESTION), None),
+    ],
+    ids=["junk_never_reaches_qa", "qa_could_not_answer", "qa_disabled"],
+)
+async def test_manager_gets_unknown_reply_when_qa_has_no_answer(
+    session_factory: Callable[[], Session],
+    db_session: Session,
+    seeded: SimpleNamespace,
+    llm: FakeLlm,
+    qa: FakeQa | None,
+) -> None:
+    sender = await _ask_as(session_factory, db_session, seeded, "manager", llm, qa)
+
+    assert "chưa hiểu" in "\n".join(sender.messages())
+    assert _row(db_session, "q1").route == "other"
+    if qa is not None and llm.result.intent == "khac":
+        assert qa.calls == []
+
+
+async def test_phieu_regex_can_read_never_reaches_qa(
+    session_factory: Callable[[], Session], db_session: Session, seeded: SimpleNamespace
+) -> None:
+    seeded.staff.role = "manager"
+    db_session.flush()
+    llm, qa = FakeLlm(ASKS_QUESTION), FakeQa()
+    _enqueue(db_session, PHIEU, message_id="f1")
+
+    await process_next(session_factory, FakeSender(), PendingStore(), now=NOW, llm=llm, qa=qa)
+
+    assert llm.calls == [] and qa.calls == []

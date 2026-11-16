@@ -10,6 +10,7 @@ Every task starts as a spec here. Legend: 🔲 not started · 🟡 in progress �
 | 2026-11-06-phase1-db-ledger-spec.md | 🟡 code + docs xong; Zalo polling ✅ (owner 07/11); còn webhook (invite spec §2.2 W10) | 2026-11-06 | 2026-11-07 | data-flow, database-design, api-contracts, integrations, directory-map, deployment |
 | 2026-11-06-phase1-invite-code-spec.md | ✅ 133 test pass; Zalo polling I1–I6 đúng (webhook: §2.2 W1–W10 chờ chạy) | 2026-11-06 | 2026-11-07 | data-flow, database-design, directory-map |
 | 2026-11-09-phase2-llm-fallback-spec.md | 🟡 code + docs xong, 152 test pass, Gemini thật ✅; còn chạy thử trên Zalo thật rồi mới ✅ | 2026-11-09 | 2026-11-09 | data-flow, database-design, integrations, directory-map |
+| 2026-11-15-phase3-qa-agent-readonly-spec.md | 🟡 code + docs xong, 218 test pass, Gemini thật 12/12 ✅; còn tạo login qa_reader trên DB owner + thử Zalo thật | 2026-11-15 | 2026-11-15 | data-flow, database-design, integrations, deployment, directory-map, ADR 0008 |
 
 ## Roadmap (one or more specs per phase — create with `/new-spec <phase>`)
 | Phase | Goal | Est. | Spec |
@@ -17,7 +18,7 @@ Every task starts as a spec here. Legend: 🔲 not started · 🟡 in progress �
 | 0 | Zalo Bot: polling echo → webhook + secret; save real payloads; test proactive send | 3–5 d | phase0-zalo-bot |
 | 1 | Non-AI ingestion: adapters, queue+dedup, invite codes, regex, validate, ledger + Hủy, reports, catalog + golden set | ~2 w | phase1-db-ledger (queue + ledger); phase1-invite-code; Hủy/reports: chưa có |
 | 2 | NER (synthetic BIO, ViDeBERTa-xsmall → ONNX int8) + LLM fallback + OK/Sai | 2–3 w | – |
-| 3 | Q&A (tools + SQL agent fallback) + dashboard API, label review, staff/invite | 2–3 w | – |
+| 3 | Q&A (tools + SQL agent fallback) + dashboard API, label review, staff/invite | 2–3 w | phase3-qa-agent-readonly (bước 1: tool chỉ đọc) |
 | Gate | Local E2E on Compose; golden set + Q&A question set pass | – | – |
 | 4 | Auth: JWT admin, manager role, invite lockout | ~1 w | – |
 | 5 | Deploy: Vercel + Compose on laptop + ngrok + GitHub Actions | ~1 w | – |

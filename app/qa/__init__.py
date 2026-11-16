@@ -1,1 +1,1 @@
-"""Q&A agent cho manager: Gemini + tool calling, SQL agent làm fallback (DB user chỉ đọc)."""
+"""Q&A agent cho manager: Gemini + tool chỉ đọc (login qa_reader). SQL agent fallback: spec sau."""

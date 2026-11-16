@@ -21,6 +21,7 @@ from app.messaging.pending import PendingStore
 from app.parser.catalog import resolve
 from app.parser.llm import LlmParser
 from app.parser.normalize import fold
+from app.qa.service import QaResponder
 from app.staff import service as staff_service
 from app.staff.models import Location, Staff
 
@@ -29,6 +30,8 @@ logger = logging.getLogger(__name__)
 ROUTE_UNLINKED = "unlinked"
 ROUTE_LLM_WAITING, ROUTE_LLM_REJECTED, ROUTE_LLM_EXPIRED = "llm_waiting", "llm_rejected", "llm_expired"
 ROUTE_INVITE_OK, ROUTE_INVITE_FAILED = "invite_ok", "invite_failed"  # Phase 4 đếm invite_failed để khoá
+ROUTE_QA, ROUTE_QA_FORBIDDEN = "qa", "qa_forbidden"
+ROLE_MANAGER = "manager"  # chỉ manager được hỏi dữ liệu kho (proposal § Hỏi đáp)
 
 Handler = Callable[[InboundMessage, datetime, PendingStore], Outcome]
 SessionFactory = Callable[[], Session]
@@ -48,6 +51,7 @@ async def process_next(
     now: datetime | None = None,
     handle: Handler = dispatcher.handle,
     llm: LlmParser | None = None,
+    qa: QaResponder | None = None,
 ) -> bool:
     """False khi hàng đợi rỗng. Lỗi xử lý tin không raise: tin → failed, nhân viên nhận câu báo lỗi."""
     now = now or datetime.now(LOCAL_TZ)
@@ -60,7 +64,7 @@ async def process_next(
         row_id, chat_id = row.id, row.chat_id
         try:
             await sender.send_chat_action(chat_id, "typing")
-            answer = await _handle_row(session, row, now, pending, handle, llm)
+            answer = await _handle_row(session, row, now, pending, handle, llm, qa)
             session.commit()
         except Exception as error:
             logger.exception("Xử lý tin %s thất bại", row_id)
@@ -79,6 +83,7 @@ async def _handle_row(
     pending: PendingStore,
     handle: Handler,
     llm: LlmParser | None,
+    qa: QaResponder | None,
 ) -> list[Reply]:
     staff = staff_service.find_by_chat_id(session, row.chat_id)
     if staff is None:
@@ -89,9 +94,9 @@ async def _handle_row(
     outcome = handle(inbox.to_message(row), now, pending)
     answer = list(outcome.replies)
     route = outcome.route
-    held = await _ask_llm(session, row, staff, now, llm) if outcome.wants_llm else None
-    if held is not None:
-        answer, route = held, ROUTE_LLM_WAITING
+    handled = await _ask_llm(session, row, staff, now, llm, qa) if outcome.wants_llm else None
+    if handled is not None:
+        answer, route = handled
     elif outcome.phieu is not None and outcome.origin is not None:
         route = _record(session, row, outcome, staff, now, answer)
     inbox.finish(row, "done", now, route)
@@ -144,19 +149,41 @@ def _write_pending(
 
 
 async def _ask_llm(
-    session: Session, row: InboundRow, staff: Staff, now: datetime, llm: LlmParser | None
-) -> list[Reply] | None:
-    """Nhờ LLM đọc tin regex bó tay. Đọc được → lưu bản chờ, hỏi OK/Sai (chưa ghi sổ).
+    session: Session,
+    row: InboundRow,
+    staff: Staff,
+    now: datetime,
+    llm: LlmParser | None,
+    qa: QaResponder | None,
+) -> tuple[list[Reply], str] | None:
+    """Nhờ LLM phân loại tin regex bó tay. Phiếu → lưu bản chờ, hỏi OK/Sai (chưa ghi sổ); câu hỏi → Q&A.
 
-    None = LLM tắt hoặc không đọc được → dùng câu trả lời của regex.
+    None = LLM tắt, không đọc được hoặc tin rác → dùng câu trả lời của regex.
     """
-    phieu = await llm.parse(row.text or "", now) if llm else None
-    if phieu is None:
+    if llm is None:
         return None
-    confirm.create(
-        session, staff=staff, chat_id=row.chat_id, inbound_id=row.id, phieu=phieu, source="llm", now=now
-    )
-    return [replies.llm_confirm(phieu, [resolve(line) for line in phieu.lines])]
+    read = await llm.parse(row.text or "", now)
+    if read.phieu is not None:
+        phieu = read.phieu
+        confirm.create(
+            session, staff=staff, chat_id=row.chat_id, inbound_id=row.id, phieu=phieu, source="llm", now=now
+        )
+        return [replies.llm_confirm(phieu, [resolve(line) for line in phieu.lines])], ROUTE_LLM_WAITING
+    if read.intent == "cau_hoi":
+        return await _ask_qa(row, staff, now, qa)
+    return None
+
+
+async def _ask_qa(
+    row: InboundRow, staff: Staff, now: datetime, qa: QaResponder | None
+) -> tuple[list[Reply], str] | None:
+    """Quyền hỏi kiểm bằng staff.role trong DB, không tin intent của Gemini. None = dùng câu "chưa hiểu"."""
+    if staff.role != ROLE_MANAGER:
+        return [replies.qa_forbidden()], ROUTE_QA_FORBIDDEN
+    if qa is None:
+        return None
+    text = await qa.answer(row.text or "", tenant_id=staff.tenant_id, staff_name=staff.name, now=now)
+    return ([replies.qa_answer(text)], ROUTE_QA) if text else None
 
 
 def _handle_unlinked(session: Session, row: InboundRow, now: datetime) -> list[Reply]:

@@ -1,5 +1,5 @@
 # 0004. Identify Zalo users by invite-code linking
-> Status: Accepted
+> Status: Accepted — the 24 h expiry is superseded by 0009 (codes no longer expire)
 > Date: 2026-11-01
 
 ## Context

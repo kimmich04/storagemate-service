@@ -13,7 +13,7 @@ Ubiquitous language. Code identifiers in English, bot replies in Vietnamese.
 | Hủy | Reverse own latest row, ≤ 30 min | `REVERSE_WINDOW` |
 | Bản chờ | `pending_actions` — NER/LLM parse awaiting `OK`/`Sai` | Expires 10 min |
 | OK / Sai | Confirm / reject a pending action | Typed text, no buttons |
-| Mã mời | `invite_codes` — 6-char, 1-use, 24 h | Links Zalo account to `staff` |
+| Mã mời | `invite_codes` — 6-char, 1-use, no expiry (ADR 0009) | Links Zalo account to `staff` |
 | Nhân viên / staff | `role = staff` | Stock commands only |
 | Quản lý / manager | `role = manager` | + Q&A + `Báo cáo` + reports |
 | Admin | Dashboard user (shop owner), `admins` table | Only JWT user |

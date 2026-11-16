@@ -1,5 +1,5 @@
 # Directory Map
-> last-updated: 2026-11-09
+> last-updated: 2026-11-15
 
 Domain-first layout (FastAPI "Bigger Applications" + fastapi-best-practices). Per-domain file roles:
 `.claude/rules/python-fastapi.md` §2. For live "who calls what": `graphify query "..."`.
@@ -21,12 +21,12 @@ Domain-first layout (FastAPI "Bigger Applications" + fastapi-best-practices). Pe
 | `app/channels/` | Zalo webhook, adapters (`base`, `zalo`, `web`), `zalo_client` | ⚡ `/webhooks/zalo` |
 | `app/messaging/` | `inbox` (enqueue/claim), `queue.process_next`, dispatcher (routing), replies | ⚙️ worker (+ `inbox.enqueue` from the webhook) |
 | `app/parser/` | regex ✅ · llm ✅ (`llm.py`: Gemini → `Phieu`) · ner / validate / service: chưa có | ⚙️ worker only |
-| `app/qa/` | Manager Q&A (tools + LangChain fallback) | ⚙️ worker only |
+| `app/qa/` | Manager Q&A: `service.py` (agent loop, `build_agent`), `tools.py` (5 read-only tools on `qa_*` views, `read_only_session`), `prompts.py`. SQL agent fallback: not yet | ⚙️ worker only |
 | `tests/` | pytest, mirrors `app/` | |
 | `alembic/` | Migrations | `0001_init` (hand-written SQL) |
 | `ml/` | NER training (Colab), not deployed | `.[ml]` extra |
 | `models/` | `.onnx` files, gitignored | pulled from HF Hub |
-| `scripts/` | `dev_db` (after loading seed: `--map-codes`, `--invite`, `--link-staff`, `--fake-moves`, `--reset`), zalo_poll, zalo_set_webhook; `_archive/` = old Excel loader | |
+| `scripts/` | `dev_db` (after loading seed: `--map-codes`, `--invite`, `--link-staff`, `--fake-moves`, `--reset`), zalo_poll, zalo_set_webhook, `qa_ask` (ask the Q&A agent one question from the CLI, real Gemini + `qa_reader`); `_archive/` = old Excel loader | |
 | `.github/workflows/ci.yml` | ruff + pytest on PR / push main | |
 | `docs/` | Proposal v2 as Markdown + `assets/figure-1..4.png` | Human scope source; edit scope here first |
 

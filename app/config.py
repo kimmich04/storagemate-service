@@ -29,12 +29,17 @@ class Settings(BaseSettings):
     JWT_EXPIRE_MINUTES: int = 60 * 12
     # Chỉ để demo dashboard khi chưa có login thật: lấy admin đầu tiên, KHÔNG bật ở production
     DEV_AUTH_ENABLED: bool = False
+    # Chỉ để test trên máy dev: mã mời dùng lại được nhiều lần (mỗi lần gắn lại nhân viên vào chat mới).
+    # KHÔNG bật ở production: ai có mã là chiếm được tài khoản nhân viên đó.
+    INVITE_REUSABLE: bool = False
 
     # LLM (Q&A + parser fallback)
     GEMINI_API_KEY: str = ""
     LLM_MODEL: str = ""  # tên model Gemini Flash-Lite, lấy trong Google AI Studio
     LLM_TIMEOUT_SECONDS: float = 15.0  # quá hạn thì coi như LLM lỗi (không thử lại)
     PENDING_TTL_MINUTES: int = 10  # thời hạn nhân viên trả OK/Sai cho bản chờ do LLM đọc
+    QA_TIMEOUT_SECONDS: float = 30.0  # tổng thời gian cho một câu hỏi Q&A (mọi lượt Gemini + tool)
+    QA_MAX_STEPS: int = 5  # số lượt gọi Gemini tối đa cho một câu hỏi Q&A
 
     # NER
     HF_MODEL_REPO: str = ""
