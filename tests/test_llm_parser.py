@@ -1,4 +1,4 @@
-"""Tầng LLM: LlmPhieu → Phieu, và GeminiParser nuốt mọi lỗi thành "chưa hiểu" (không gọi Gemini thật)."""
+"""Tầng LLM: LlmPhieu → LlmRead(intent, Phieu); GeminiParser nuốt mọi lỗi thành "khac" (không gọi Gemini)."""
 
 import asyncio
 from datetime import date, datetime
@@ -8,7 +8,7 @@ from zoneinfo import ZoneInfo
 import pytest
 from pydantic import ValidationError
 
-from app.parser.llm import GeminiParser, LlmLine, LlmPhieu, to_phieu
+from app.parser.llm import GeminiParser, LlmLine, LlmPhieu, LlmRead, to_phieu, to_read
 from app.parser.regex import NO_DATE_NOTE, UNKNOWN_LOC
 
 NOW = datetime(2026, 11, 5, 15, 0, tzinfo=ZoneInfo("Asia/Ho_Chi_Minh"))  # thứ năm
@@ -16,7 +16,7 @@ NOW = datetime(2026, 11, 5, 15, 0, tzinfo=ZoneInfo("Asia/Ho_Chi_Minh"))  # thứ
 
 def _parsed(**overrides: object) -> LlmPhieu:
     fields: dict = {
-        "is_phieu": True,
+        "intent": "phieu",
         "action": "IN",
         "day": date(2026, 11, 4),
         "from_loc": None,
@@ -65,11 +65,19 @@ def test_to_phieu_keeps_decimal_quantity_exact() -> None:
 
 @pytest.mark.parametrize(
     "overrides",
-    [{"is_phieu": False}, {"action": None}, {"lines": []}],
-    ids=["not_a_phieu", "no_action", "no_lines"],
+    [{"intent": "khac"}, {"intent": "cau_hoi"}, {"action": None}, {"lines": []}],
+    ids=["junk", "question", "no_action", "no_lines"],
 )
 def test_to_phieu_returns_none_when_llm_is_unsure(overrides: dict) -> None:
     assert to_phieu(_parsed(**overrides), NOW) is None
+
+
+def test_question_is_read_as_question_without_phieu() -> None:
+    assert to_read(_parsed(intent="cau_hoi", action=None, lines=[]), NOW) == LlmRead("cau_hoi", None)
+
+
+def test_phieu_intent_missing_lines_has_no_phieu() -> None:
+    assert to_read(_parsed(lines=[]), NOW) == LlmRead("phieu", None)
 
 
 @pytest.mark.parametrize("qty", [0, -3, 10**9])
@@ -82,9 +90,9 @@ def test_llm_line_rejects_bad_quantity(qty: float) -> None:
 async def test_parser_returns_phieu_and_sends_date_and_delimited_message() -> None:
     chain = FakeChain(result=_parsed())
 
-    phieu = await GeminiParser(chain, timeout=5).parse("hôm qua nhập 10 hộp cafe", NOW)
+    read = await GeminiParser(chain, timeout=5).parse("hôm qua nhập 10 hộp cafe", NOW)
 
-    assert phieu is not None and phieu.lines[0].qty == Decimal("10")
+    assert read.intent == "phieu" and read.phieu.lines[0].qty == Decimal("10")
     system, human = chain.messages
     assert "05/11/2026" in system.content and "thứ năm" in system.content
     assert human.content == "<tin_nhan>\nhôm qua nhập 10 hộp cafe\n</tin_nhan>"
@@ -94,7 +102,7 @@ async def test_parser_returns_phieu_and_sends_date_and_delimited_message() -> No
 async def test_parser_accepts_dict_result() -> None:
     chain = FakeChain(result=_parsed().model_dump(mode="json"))
 
-    assert await GeminiParser(chain, timeout=5).parse("x", NOW) is not None
+    assert (await GeminiParser(chain, timeout=5).parse("x", NOW)).phieu is not None
 
 
 @pytest.mark.anyio
@@ -103,11 +111,12 @@ async def test_parser_accepts_dict_result() -> None:
     [
         FakeChain(error=RuntimeError("quota 429")),
         FakeChain(result=None),
-        FakeChain(result={"is_phieu": True, "action": "SELL", "lines": []}),
-        FakeChain(result=_parsed(is_phieu=False)),
+        FakeChain(result={"intent": "phieu", "action": "SELL", "lines": []}),
+        FakeChain(result={"intent": "hoi_linh_tinh"}),
+        FakeChain(result=_parsed(intent="khac")),
         FakeChain(result=_parsed(), delay=1),
     ],
-    ids=["network_error", "empty_result", "schema_violation", "not_a_phieu", "timeout"],
+    ids=["network_error", "empty_result", "schema_violation", "unknown_intent", "junk", "timeout"],
 )
-async def test_parser_returns_none_on_any_failure(chain: FakeChain) -> None:
-    assert await GeminiParser(chain, timeout=0.05).parse("x", NOW) is None
+async def test_parser_reads_nothing_on_any_failure(chain: FakeChain) -> None:
+    assert await GeminiParser(chain, timeout=0.05).parse("x", NOW) == LlmRead("khac", None)

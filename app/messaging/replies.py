@@ -96,6 +96,18 @@ def nothing_pending() -> Reply:
     return Reply("Hiện không có phiếu nào đang chờ xác nhận. Gõ `menu` để xem mẫu phiếu nhé.")
 
 
+def qa_answer(text: str) -> Reply:
+    """Câu trả lời do Gemini viết: gửi chữ thường, không bật markdown (ký tự lạ có thể làm hỏng định dạng)."""
+    return Reply(text, parse_mode=None)
+
+
+def qa_forbidden() -> Reply:
+    return Reply(
+        "🔒 Chỉ quản lý mới hỏi được dữ liệu kho qua bot. Muốn ghi phiếu, bạn gõ menu để xem mẫu nhé.",
+        parse_mode=None,
+    )
+
+
 def ledger_result(phieu: Phieu, result: LedgerResult) -> Reply | None:
     """Báo phần nào đã vào sổ và phần nào CHƯA, để nhân viên gõ lại đúng các dòng thiếu."""
     if result.date_error:
@@ -126,7 +138,7 @@ def invite_needed() -> Reply:
 
 def invite_rejected() -> Reply:
     return Reply(
-        "❌ Mã mời không đúng hoặc đã hết hạn. Kiểm tra lại mã, hoặc nhờ quản lý tạo mã mới cho bạn.",
+        "❌ Mã mời không đúng hoặc đã được dùng. Kiểm tra lại mã, hoặc nhờ quản lý tạo mã mới cho bạn.",
         parse_mode=None,
     )
 
